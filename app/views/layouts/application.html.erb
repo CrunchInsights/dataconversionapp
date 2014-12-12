@@ -7,38 +7,59 @@
   <%= csrf_meta_tags %>
 </head>
 <body>
- <div class="container">
- 	
- 	<ul class="nav nav-tabs">  
-      
-       
-       <% if current_user %> 
-        <li> <%= link_to 'Home' , root_path %> </li> 
-       <li><%= link_to "Sign Out", destroy_user_session_path, method: :delete %></li>
+
+<div class="navbar navbar-default navbar-fixed-top" role="navigation">
+  <div class="container-fluid">
+    <!-- Brand and toggle get grouped for better mobile display -->
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+        <span class="sr-only">Toggle navigation</span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="#">DataConversion</a>
+    </div>
+
+    <!-- Collect the nav links, forms, and other content for toggling -->
+    <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+      <ul class="nav navbar-nav">
+      	<% if current_user %> 
+      	<li class="active"> <%= link_to 'Home' , root_path %> </li> 
+      	<% end %>        
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+       <% if current_user %>               
+       <li ><%= link_to "Sign Out", destroy_user_session_path, method: :delete %></li>
        <% else %> 
         <li> <%= link_to 'Sign Up' , new_user_registration_path %> </li> 
         <li> <%= link_to 'Sign In' , new_user_session_path %> </li>
-       <% end %>
-  </ul>
-<% if  flash[:notice] %>  
-    <div class='alert alert-success'>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-      <%= flash[:notice] %>
-    </div>
-  <% elsif  flash[:error] %> 
-    <div class='alert alert-error'>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-      <%= flash[:error] %>
-    </div>
-  <% elsif  flash[:alert] %> 
-    <div class='alert'>
-      <button type="button" class="close" data-dismiss="alert">&times;</button>
-      <%= flash[:alert] %>
-    </div>
-  <% end %>
-  
-<%= yield %> 	
- 	
- </div>
+       <% end %>    
+      </ul>
+    </div><!-- /.navbar-collapse -->
+  </div><!-- /.container-fluid -->
+</div> 
+
+
+<div class="container">
+	<div style="height:52px; width:100%"></div>
+			<% if  flash[:notice] %>  
+			    <div class='alert alert-success'>
+			      <button type="button" class="close" data-dismiss="alert">&times;</button>
+			      <%= flash[:notice] %>
+			    </div>
+			  <% elsif  flash[:error] %> 
+			    <div class='alert alert-error'>
+			      <button type="button" class="close" data-dismiss="alert">&times;</button>
+			      <%= flash[:error] %>
+			    </div>
+			  <% elsif  flash[:alert] %> 
+			    <div class='alert alert-info'>
+			      <button type="button" class="close" data-dismiss="alert">&times;</button>
+			      <%= flash[:alert] %>
+			    </div>
+			  <% end %>
+		<%= yield %> 	  
+</div>	
 </body>
 </html>
