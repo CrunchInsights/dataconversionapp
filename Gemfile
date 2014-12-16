@@ -40,3 +40,5 @@ gem 'bootstrap-sass', '3.2.0.0'
 gem 'devise'
 
 gem 'quiet_assets', :group => :development
+
+gem 'byebug'

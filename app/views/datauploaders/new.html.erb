@@ -1,0 +1,7 @@
+<h1>Upload Data</h1>
+
+<%= form_tag import_datauploaders_path, multipart: true do %>
+<%= file_field_tag :file %>
+	<%= submit_tag "Upload Data", class:"btn btn-default" %>
+<% end %>
+<%= link_to 'Back', datauploaders_path %>

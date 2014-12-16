@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20141209102223) do
+ActiveRecord::Schema.define(version: 20141216121301) do
 
   create_table "companies", force: true do |t|
     t.string   "name"
@@ -26,6 +26,26 @@ ActiveRecord::Schema.define(version: 20141209102223) do
     t.datetime "created_at"
     t.datetime "updated_at"
   end
+
+  create_table "datauploaders", force: true do |t|
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  create_table "userfilemappings", force: true do |t|
+    t.integer  "user_id"
+    t.string   "filename",    limit: 100, null: false
+    t.string   "tablename",   limit: 100, null: false
+    t.integer  "created_by"
+    t.datetime "created_on"
+    t.integer  "modified_by"
+    t.datetime "modified_on"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
+  add_index "userfilemappings", ["tablename"], name: "index_userfilemappings_on_tablename", unique: true
+  add_index "userfilemappings", ["user_id"], name: "index_userfilemappings_on_user_id"
 
   create_table "users", force: true do |t|
     t.string   "email",                  default: "", null: false
