@@ -72,15 +72,21 @@ class DatauploadersController < ApplicationController
             columnDetail = {columnName: column,
                             isNullable: false,
                             dataType: "",
-                            fieldLength: 0,
+                            fieldLength: "0",
                             isUnique: false}
                             
           #trim blank spaces at begining and end
-          csvData[i] = csvData[i].collect{|x| x.strip}
+          csvData[i] = csvData[i].collect{|x| if (x!=nil) then x.strip end}
           
-          #check nullable feild  
-          if csvData[i].include? '' then
-            columnDetail[:isNullable] = true
+          if csvData[i].reject! {|z| z.blank?} == nil then 
+            columnDetail[:isNullable] = false
+          end
+          
+          #check nullable feild 
+          if !columnDetail[:isNullable] then 
+            if csvData[i].include? '' then
+              columnDetail[:isNullable] = true
+            end
           end                   
           
           #check value containing null values
@@ -88,6 +94,7 @@ class DatauploadersController < ApplicationController
             #check nullability of column
             if csvData[i].map(&:downcase).include? 'null' then
               columnDetail[:isNullable] = true
+              csvData[i] = csvData[i].map(&:downcase).delete("null")
             end            
           end
           
@@ -99,60 +106,132 @@ class DatauploadersController < ApplicationController
             end            
           end
           
+          if csvData[i].size == csvData[i].uniq.size  then
+            columnDetail[:isUnique] = true
+          end
+          
           #removing blank, null and nil values from array                   
-          csvData[i] = csvData[i].map(&:downcase).reject! { |c| c.blank? }
-          csvData[i] = csvData[i].map(&:downcase).delete("null")
-          
-          
-          boolArr = ['true', '1', 'yes', 'on', 'false', '0', 'no', 'off', 0, 1]
-          
-          # Check array containing integer values only
-          if columnDetail[:dataType]=="" then
-            begin
-              if (csvData[i] - boolArr).empty? then
-                columnDetail[:dataType] = "boolean"
-              end
-            rescue
-              # catch code at here
-            end
-          end
-          
-          # Check array containing integer values only
-          if columnDetail[:dataType]=="" then
-            begin
-              isDataInteger=csvData[i].collect{|val| Integer(val)}
-              columnDetail[:dataType] = "integer"
-            rescue
-              # catch code at here
-            end
-          end
-          
-          # Check array containing float values only
-          if columnDetail[:dataType]=="" then
-            begin
-              isDataInteger=csvData[i].collect{|val| Float(val)}
-              columnDetail[:dataType] = "decimal"
-            rescue
-              # catch code at here
-            end
-         end
-         
-         # Check array containing string values
-         if columnDetail[:dataType]=="" then
-          begin
-            isDataInteger=csvData[i].collect{|val| String(val)}
-            columnDetail[:dataType] = "varchar"
-          rescue
-            # catch code at here
-          end
-         end
-             
+          csvData[i] = csvData[i].map(&:downcase).reject { |c| c.blank? }
+          puts csvData[i].size           
+          if csvData[i].size > 0 then            
+            boolArr = ['true', '1', 'yes', 'on', 'false', '0', 'no', 'off', 0, 1]
             
-         @columnsDetail.append(columnDetail)
-         i=i+1                         
-          end
-                              puts  @columnsDetail
-          redirect_to new_datauploader_path, notice: "Data Uploaded Successfully"
+            # Check array containing integer values only
+            if columnDetail[:dataType]=="" then
+              begin
+                if (csvData[i] - boolArr).empty? then
+                  columnDetail[:dataType] = "boolean"
+                end
+              rescue
+                # catch code at here
+              end
+            end
+            
+            isDateTime = true
+            if (((csvData[i].collect{|v| v.include? '-'}).uniq).include? false) then
+              isDateTime = false
+            end
+            
+            if (((csvData[i].collect{|v| v.include? '/'}).uniq).include? false) then
+              isDateTime = false
+            end
+            
+            if !isDateTime then
+              tempArr = csvData[i].collect{|x| x.tr("-/", '')}
+              # Check array containing date values only
+              if columnDetail[:dataType]=="" then
+                begin
+                  isDataInteger=tempArr.collect{|val| Date.strptime(val, "%m%d%Y")}
+                  columnDetail[:dataType] = "datetime"
+                rescue
+                  # catch code at here
+                end
+              end
+              
+              # Check array containing date values only
+              if columnDetail[:dataType]=="" then
+                begin
+                  isDataInteger=tempArr.collect{|val| Date.strptime(val, "%d%m%Y")}
+                  columnDetail[:dataType] = "datetime"
+                rescue
+                  # catch code at here
+                end
+              end
+              
+              # Check array containing date values only
+              if columnDetail[:dataType]=="" then
+                begin
+                  isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y%m%d")}
+                  columnDetail[:dataType] = "datetime"
+                rescue
+                  # catch code at here
+                end
+              end
+              
+              # Check array containing date values only
+              if columnDetail[:dataType]=="" then
+                begin
+                  isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y%d%m")}
+                  columnDetail[:dataType] = "datetime"
+                rescue
+                  # catch code at here
+                end
+              end
+              
+              # Check array containing date values only
+              if columnDetail[:dataType]=="" then
+                begin
+                  isDataInteger=csvData[i].collect{|val| DateTime.parse(val)}
+                  columnDetail[:dataType] = "datetime"
+                rescue
+                  # catch code at here
+                end
+              end
+            end                   
+            
+            # Check array containing integer values only
+            if columnDetail[:dataType]=="" then
+              begin
+                isDataInteger=csvData[i].collect{|val| Integer(val)}
+                columnDetail[:dataType] = "integer"
+              rescue
+                # catch code at here
+              end
+            end
+            
+            # Check array containing float values only
+            if columnDetail[:dataType]=="" then
+              begin
+                isDataInteger=csvData[i].collect{|val| Float(val)}
+                maxLengthAfterDecimal = (((csvData[i].map{|k| k.split(',')[1]}).reject! { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                maxLengthBeforeDecimal = (((csvData[i].map{|k| k.split(',')[0]}).reject! { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                columnDetail[:fieldLength] = (maxLengthBeforeDecimal + maxLengthAfterDecimal + 1) + "," + maxLengthAfterDecimal         
+                columnDetail[:dataType] = "decimal"
+              rescue
+                # catch code at here
+              end
+           end
+           
+           # Check array containing string values
+           if columnDetail[:dataType]=="" then
+            begin
+              isDataInteger=csvData[i].collect{|val| String(val)}
+              columnDetail[:dataType] = "varchar"
+            rescue
+              # catch code at here
+            end
+           end
+           
+           if columnDetail[:dataType]!= "decimal" then
+             columnDetail[:fieldLength] = ((csvData[i].group_by(&:size).max.last)[0].size) + 1
+           end
+        end          
+            
+        @columnsDetail.append(columnDetail)
+        i=i+1                         
+        end
+        puts  @columnsDetail
+        redirect_to new_datauploader_path, notice: "Data Uploaded Successfully"
       end      
     else
       redirect_to new_datauploader_path, :flash => { :error => "Please select a file to upload data." }
