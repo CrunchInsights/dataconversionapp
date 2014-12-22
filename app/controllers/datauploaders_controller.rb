@@ -55,50 +55,103 @@ class DatauploadersController < ApplicationController
         end         
         redirect_to new_datauploader_path, :flash => { :error => errors }
       else
-          #create_dynamic_table(tableName.downcase.pluralize)
-          #schema = DrNicMagicModels::Schema.new(Object)
-          #DrNicMagicModels::Schema.class_eval "@@models = nil" 
-          #DrNicMagicModels::Schema.load_schema
-          #DrNicMagicModels::Schema.class_eval "puts @@models.inspect"
-          csvData = []
-          i = 0;
-          columnName = ""
-          columnsDetail = []
+         csvData = []
           CSV.foreach(params[:file].path) do |row|                  
              csvData.append(row.to_a)
              #value_list = line.split(',')             
              #ql = "INSERT INTO #{tableName.downcase.pluralize} ('column1', `column2`, 'column3', `column4`) VALUES (#{value_list.map {|rec| "'#{rec}'" }.join(", ")})"
              #ActiveRecord::Base.connection.execute(sql)
-          end          
+          end     
+          
+          i = 0;
+          columnName = ""
+          @columnsDetail = []     
           columns = csvData.shift
           csvData = csvData.transpose          
-          columns.each do |column|          
+          columns.each do |column|
             columnDetail = {columnName: column,
                             isNullable: false,
-                            dataType: "string",
+                            dataType: "",
                             fieldLength: 0,
                             isUnique: false}
-            
-            if csvData[i].collect{|x| x.strip}.include? '' then
-              columnDetail.isNullable = true
-            end
-            if !(columnDetail.isNullable) then
-              #check nullability of column
-              if csvData[i].map(&:downcase).include? 'null' then
-                columnDetail.isNullable = true
-              end            
-            end
-            
-            if csvData[i].all?{|arr_value| arr_value.is_a? Integer}
                             
-            end
-            
-            if csvData[i].all?{|arr_value| arr_value.is_a? String}
-              
-            end
-                                       
+          #trim blank spaces at begining and end
+          csvData[i] = csvData[i].collect{|x| x.strip}
+          
+          #check nullable feild  
+          if csvData[i].include? '' then
+            columnDetail[:isNullable] = true
+          end                   
+          
+          #check value containing null values
+          if !columnDetail[:isNullable] then
+            #check nullability of column
+            if csvData[i].map(&:downcase).include? 'null' then
+              columnDetail[:isNullable] = true
+            end            
           end
-                                  
+          
+          #check value containing nil values
+          if !columnDetail[:isNullable] then
+            #check nullability of column
+            if csvData[i].map(&:downcase).include? 'nil' then
+              columnDetail[:isNullable] = true
+            end            
+          end
+          
+          #removing blank, null and nil values from array                   
+          csvData[i] = csvData[i].map(&:downcase).reject! { |c| c.blank? }
+          csvData[i] = csvData[i].map(&:downcase).delete("null")
+          
+          
+          boolArr = ['true', '1', 'yes', 'on', 'false', '0', 'no', 'off', 0, 1]
+          
+          # Check array containing integer values only
+          if columnDetail[:dataType]=="" then
+            begin
+              if (csvData[i] - boolArr).empty? then
+                columnDetail[:dataType] = "boolean"
+              end
+            rescue
+              # catch code at here
+            end
+          end
+          
+          # Check array containing integer values only
+          if columnDetail[:dataType]=="" then
+            begin
+              isDataInteger=csvData[i].collect{|val| Integer(val)}
+              columnDetail[:dataType] = "integer"
+            rescue
+              # catch code at here
+            end
+          end
+          
+          # Check array containing float values only
+          if columnDetail[:dataType]=="" then
+            begin
+              isDataInteger=csvData[i].collect{|val| Float(val)}
+              columnDetail[:dataType] = "decimal"
+            rescue
+              # catch code at here
+            end
+         end
+         
+         # Check array containing string values
+         if columnDetail[:dataType]=="" then
+          begin
+            isDataInteger=csvData[i].collect{|val| String(val)}
+            columnDetail[:dataType] = "varchar"
+          rescue
+            # catch code at here
+          end
+         end
+             
+            
+         @columnsDetail.append(columnDetail)
+         i=i+1                         
+          end
+                              puts  @columnsDetail
           redirect_to new_datauploader_path, notice: "Data Uploaded Successfully"
       end      
     else

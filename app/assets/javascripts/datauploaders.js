@@ -1,5 +1,5 @@
 $('#file').change(function(){
-	var fileType = 'comma-separated-values';
+	var fileType = 'comma-separated-values,vnd.ms-excel';
 	var isCorrectType = false;
     var chosen = this.files[0];
     
