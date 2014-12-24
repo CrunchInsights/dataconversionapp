@@ -59,8 +59,11 @@ class DatauploadersController < ApplicationController
         CSV.foreach(params[:file].path) do |row|
           csvData.append(row.to_a)
           #value_list = line.split(',')             
-          #ql = "INSERT INTO #{tableName.downcase.pluralize} ('column1', `column2`, 'column3', `column4`) VALUES (#{value_list.map {|rec| "'#{rec}'" }.join(", ")})"
-          #AciveRecord::Base.connection.execute(sql)
+          #sql = "INSERT INTO userfilemappings ('column1', `column2`, 'column3', `column4`) VALUES (#{value_list.map {|rec| "'#{rec}'" }.join(", ")})"
+          #sql = "INSERT INTO userfilemappings ('column1', `column2`, 'column3', `column4`) VALUES ('sdds', 'dd', 'ddffd','dsds')"
+          #puts "Hiiiiiiiiiii " + sql
+          #res = AciveRecord::Base.connection.execute(sql)
+          #puts res
         end     
           
         i = 0;
@@ -252,7 +255,7 @@ class DatauploadersController < ApplicationController
         end
         #puts  @columnsDetail
         create_dynamic_table(tableName.downcase.pluralize, @columnsDetail)
-        redirect_to new_datauploader_path, notice: "Data Uploaded Successfully"
+        redirect_to showuploadedschema_datauploaders_path({:tableName => tableName.downcase.pluralize}), notice: "Data Uploaded Successfully"
       end      
     else
       redirect_to new_datauploader_path, :flash => { :error => "Please select a file to upload data." }
@@ -261,6 +264,7 @@ class DatauploadersController < ApplicationController
   
   def create_dynamic_table(table_name, columnStructureObject)
     begin
+      uniqueColumns = []
       if columnStructureObject.size > 0 then        
         ActiveRecord::Schema.define do
           create_table "#{table_name}" do | t |
@@ -273,9 +277,15 @@ class DatauploadersController < ApplicationController
               when "datetime"
                 t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable]             
               else
-                t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable], limit: columnStruct[:fieldLength], uniq: columnStruct[:isUnique]
+                if columnStruct[:isUnique] == true then
+                  uniqueColumns.append(columnStruct[:columnName])
+                end
+                t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable], limit: columnStruct[:fieldLength]
               end              
             end
+          end
+          uniqueColumns.each do |uniqCol|
+            add_index table_name, uniqCol, unique: true
           end
         end
       end                  
@@ -285,6 +295,14 @@ class DatauploadersController < ApplicationController
     end
   end
 
+  
+  def showuploadedschema
+    tableName = params[:tableName]       
+    sql = "DESC #{tableName}"    
+    @resultSet = AciveRecord::Base.connection.execute(sql)    
+    puts @resultSet  
+  end
+  
   private
     def set_datauploader
       @datauploader = Datauploader.find(params[:id])

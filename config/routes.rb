@@ -1,6 +1,9 @@
 Rails.application.routes.draw do
   resources :datauploaders do
-    collection {post:import}
+    collection do
+      post:import
+      get:showuploadedschema
+    end
   end
 
   devise_for :users

@@ -42,3 +42,6 @@ gem 'devise'
 gem 'quiet_assets', :group => :development
 
 gem 'byebug'
+
+gem 'mysql2'
+
