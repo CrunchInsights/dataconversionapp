@@ -45,3 +45,7 @@ gem 'byebug'
 
 gem 'mysql2'
 
+gem 'debase'
+
+gem 'smarter_csv'
+

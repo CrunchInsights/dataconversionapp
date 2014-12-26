@@ -17,3 +17,4 @@
 
 //= require bootstrap
 //= require alertify.min
+//= require jquery.dataTables.min

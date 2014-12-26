@@ -1,1 +1,32 @@
-<h1>Upload Data Schema</h1>
+<h1>Uploaded Data Schema</h1>
+<table id="uploadedSchema" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
+  <thead>
+      <tr>
+        <th>Column Name</th>
+        <th>Type</th>
+        <th>Null</th>
+        <th>Unique</th>
+        <th>Action</th>
+      </tr>
+  </thead>
+
+  <tbody>
+    <% if @uploadedSchema.size > 0 then %>
+        <% @uploadedSchema.each do |schema| %>
+          <tr>
+            <td><%= schema[:Field] %></td>
+            <td><%= schema[:Type] %></td>
+            <td><%= schema[:Null] %></td>
+            <td>
+              <% if schema[:Key] == "UNI" then %>
+                UNIQUE
+              <% else %>
+                <%= schema[:Key] %>
+              <% end %>
+            </td>
+            <td></td>
+          </tr>
+        <% end %>
+    <% end %>
+  </tbody>
+</table>

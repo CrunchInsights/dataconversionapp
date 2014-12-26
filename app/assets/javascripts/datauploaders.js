@@ -19,3 +19,7 @@ $('#file').change(function(){
         }
     }
 });
+
+$(document).ready(function() {
+    $('#uploadedSchema').DataTable();
+} );
