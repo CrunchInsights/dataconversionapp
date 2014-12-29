@@ -2,29 +2,49 @@
 <table id="uploadedSchema" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
   <thead>
       <tr>
-        <th>Column Name</th>
-        <th>Type</th>
+        <th style="width: 250px">Column Name</th>
+        <th style="width: 250px">Type</th>
         <th>Null</th>
         <th>Unique</th>
-        <th>Action</th>
+        <th style="width: 90px">Action</th>
       </tr>
   </thead>
 
   <tbody>
     <% if @uploadedSchema.size > 0 then %>
+   
         <% @uploadedSchema.each do |schema| %>
           <tr>
-            <td><%= schema[:Field] %></td>
-            <td><%= schema[:Type] %></td>
-            <td><%= schema[:Null] %></td>
+            <td>
+            	 <div class="form-group" style="margin-bottom: 0;">				   
+				    <input type="text" class="form-control" value="<%= schema[:Field] %>">
+				 </div>
+            </td>
+            <td>
+            	<div class="form-group" style="margin-bottom: 0;">
+            		<select class="form-control">
+					  <option <%= ((schema[:Type]).include? "varchar")?"selected":"" %>>string</option>
+					  <option <%= ((schema[:Type]).include? "int")?"selected":""%> >integer</option>
+					  <option <%= ((schema[:Type]).include? "decimal")?"selected":""%> >decimal</option>
+					  <option <%= ((schema[:Type]).include? "datetime")?"selected":"" %> >datetime</option>
+					  <option <%= ((schema[:Type]).include? "boolean")?"selected":"" %> >boolean</option>
+					</select>
+            	</div>            	
+            </td>
+            <td><%= schema[:Null] %><input  type="text" style="display: none"/></td>
             <td>
               <% if schema[:Key] == "UNI" then %>
-                UNIQUE
+                UNIQUE <input  type="text" style="display: none"/>
               <% else %>
-                <%= schema[:Key] %>
+                <%= schema[:Key] %> <input  type="text" style="display: none"/>
               <% end %>
             </td>
-            <td></td>
+            <td>
+            	<div  >
+            		<button type="button" class="btn btn-sm btn-warning">Edit</button>
+            		<button type="button" class="btn btn-sm btn-primary">Save</button>
+            	</div>
+            </td>
           </tr>
         <% end %>
     <% end %>

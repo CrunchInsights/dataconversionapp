@@ -52,22 +52,26 @@ class Datauploader < ActiveRecord::Base
 
   def self.insertCsvData(filePath, tableName, columnStructureObject)
     if columnStructureObject.size > 0 then
-      tableColumns = []
-      columnStructureObject.each do |columnName|
-        tableColumns.append(columnStructureObject[:columnName])
+      tableColumns = []      
+      columnStructureObject.each do |columnName|       
+        tableColumns.append(columnName[:columnName])
       end
-      puts "(#{tableColumns}.map{|col| "'#{col}'"}.join(", "))"
+      tableColStr = tableColumns.map{|col| "#{col}"}.join(", ")
+      puts tableColStr
       options = {
          :chunk_size=>2
       }
       SmarterCSV.process(filePath, options) do |chunk|
         chunk.each do |data_hash|
+          byebug
+          
           data_hash = data_hash.to_a
           data_hash = data_hash.transpose
           data_hash.shift
 
-          puts data_hash
-          #Moulding.create!( data_hash )
+          data_hash = data_hash[0].map{|c| "'#{c}'"}.join(", ")
+          my_sql="INSERT INTO #{tableName} (#{tableColStr}) Values (#{data_hash})"
+          resultSet = ActiveRecord::Base.connection.execute(my_sql)
         end
       end
     end

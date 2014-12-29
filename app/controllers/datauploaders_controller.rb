@@ -84,6 +84,7 @@ class DatauploadersController < ApplicationController
           columnDetail = {columnName: column,
                   isNullable: false,
                   dataType: "",
+                  dateformat:"",
                   fieldLength: "0",
                   isUnique: true}          
                                            
@@ -160,6 +161,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%m %d %Y")}
                     columnDetail[:dataType] = "datetime"
+                    dateformat:"%m %d %Y"
                   rescue
                     # catch code at here
                   end
@@ -170,6 +172,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%d %m %Y")}
                     columnDetail[:dataType] = "datetime"
+                    dateformat:"%d %m %Y"
                   rescue
                   # catch code at here
                   end
@@ -180,6 +183,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y %m %d")}
                     columnDetail[:dataType] = "datetime"
+                    dateformat:"%Y %m %d"
                   rescue
                     # catch code at here
                   end
@@ -190,6 +194,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y %d %m")}
                     columnDetail[:dataType] = "datetime"
+                    dateformat:"%Y %d %m"
                   rescue
                     # catch code at here
                   end
