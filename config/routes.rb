@@ -3,6 +3,8 @@ Rails.application.routes.draw do
     collection do
       post:import
       get:showuploadedschema
+      get:uploadedfile
+      get:uploadfilerecord
     end
   end
 

@@ -18,3 +18,9 @@
 //= require bootstrap
 //= require alertify.min
 //= require jquery.dataTables.min
+
+
+//Write comman javascript code at here for all over application use
+ $(document).ready(function () {
+      $('.dropdown-toggle').dropdown();
+ });

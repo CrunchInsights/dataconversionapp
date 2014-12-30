@@ -63,8 +63,6 @@ class Datauploader < ActiveRecord::Base
       }
       SmarterCSV.process(filePath, options) do |chunk|
         chunk.each do |data_hash|
-          byebug
-          
           data_hash = data_hash.to_a
           data_hash = data_hash.transpose
           data_hash.shift

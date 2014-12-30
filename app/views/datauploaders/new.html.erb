@@ -2,6 +2,6 @@
 
 <%= form_tag import_datauploaders_path, multipart: true, id: 'uploadForm' do %>
 	<div class="row"><div class="col-sm-3"><%= file_field_tag :file %></div>
-	<div class="col-sm-6"><%= submit_tag "Upload Data", class:"btn btn-primary" %></div></div>
+	<div class="col-sm-6"><%= submit_tag "Upload Data", class:"btn btn-sm btn-primary" %></div></div>
 <% end %>
 <%= javascript_include_tag('datauploaders.js') %>

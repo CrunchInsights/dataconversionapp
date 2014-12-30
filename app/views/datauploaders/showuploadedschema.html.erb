@@ -9,7 +9,6 @@
         <th style="width: 90px">Action</th>
       </tr>
   </thead>
-
   <tbody>
     <% if @uploadedSchema.size > 0 then %>
    
@@ -50,3 +49,4 @@
     <% end %>
   </tbody>
 </table>
+<%= javascript_include_tag('datauploaders.js') %>

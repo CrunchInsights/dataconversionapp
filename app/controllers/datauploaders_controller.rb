@@ -161,7 +161,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%m %d %Y")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat:"%m %d %Y"
+                    dateformat="%m %d %Y"
                   rescue
                     # catch code at here
                   end
@@ -172,7 +172,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%d %m %Y")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat:"%d %m %Y"
+                    dateformat="%d %m %Y"
                   rescue
                   # catch code at here
                   end
@@ -183,7 +183,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y %m %d")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat:"%Y %m %d"
+                    dateformat="%Y %m %d"
                   rescue
                     # catch code at here
                   end
@@ -194,7 +194,7 @@ class DatauploadersController < ApplicationController
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y %d %m")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat:"%Y %d %m"
+                    dateformat="%Y %d %m"
                   rescue
                     # catch code at here
                   end
@@ -261,6 +261,27 @@ class DatauploadersController < ApplicationController
     end
   end
 
+  def uploadedfile
+   
+    currentUser = current_user.id
+    @uploadedFiles = Userfilemapping.where(:user_id =>currentUser )
+    respond_with(@uploadedFiles)
+
+  end
+  def uploadfilerecord
+    @uploadedRecords=[]
+    tableName = params[:tableName]
+    my_sql="SELECT * FROM #{tableName}"
+    resultRecords = ActiveRecord::Base.connection.execute(my_sql)
+    if resultRecords.size > 0 then
+      resultRecords.each do |result|
+        #byebug
+        @uploadedRecords.append(result)
+      end
+    end
+    respond_with(@uploadedRecords)
+  end
+  
   def showuploadedschema
     tableName = params[:tableName]
     @uploadedSchema = Datauploader.getUploadedSchema(tableName)

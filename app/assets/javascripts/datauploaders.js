@@ -20,6 +20,8 @@ $('#file').change(function(){
     }
 });
 
+
 $(document).ready(function() {
+    $('.dropdown-toggle').dropdown();
     $('#uploadedSchema').DataTable();
 } );
