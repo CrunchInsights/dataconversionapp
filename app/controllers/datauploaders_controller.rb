@@ -82,11 +82,11 @@ class DatauploadersController < ApplicationController
             column.gsub(/[^0-9A-Za-z]/, '')
           end       
           columnDetail = {columnName: column,
-                  isNullable: false,
-                  dataType: "",
-                  dateformat:"",
-                  fieldLength: "0",
-                  isUnique: true}          
+                          isNullable: false,
+                          dataType: "",
+                          dateformat:"",
+                          fieldLength: "0",
+                          isUnique: true}
                                            
           #trim blank spaces at begining and end
           csvData[i] = csvData[i].collect{|x| if (x!=nil) then x.strip end}
@@ -146,62 +146,65 @@ class DatauploadersController < ApplicationController
               end
         
               isDateTime = false
-              if (((csvData[i].collect{|v| v.include? '-'}).uniq).include? false)==false then
+              inputFieldSplitterUsed = ''
+              if (((csvData[i].collect{|v| v.include? '-'}).uniq).include? false)== false then
+                inputFieldSplitterUsed = '-'
                 isDateTime = true
               end
           
-              if (((csvData[i].collect{|v| v.include? '/'}).uniq).include? false) ==false then
+              if (((csvData[i].collect{|v| v.include? '/'}).uniq).include? false) == false then
+                inputFieldSplitterUsed = '/'
                 isDateTime = true
               end
           
               if isDateTime then
                 tempArr = csvData[i].collect{|x| x.tr("-/", ' ')}
                 # Check array containing date values only
-                if columnDetail[:dataType]=="" then
+                if columnDetail[:dataType] == "" then
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%m %d %Y")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat="%m %d %Y"
+                    columnDetail[:dateformat] = "%m" + inputFieldSplitterUsed + "%d" + inputFieldSplitterUsed + "%Y"
                   rescue
                     # catch code at here
                   end
                 end
             
                 # Check array containing date values only
-                if columnDetail[:dataType]=="" then
+                if columnDetail[:dataType] == "" then
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%d %m %Y")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat="%d %m %Y"
+                    columnDetail[:dateformat] = "%d" + inputFieldSplitterUsed + "%m" + inputFieldSplitterUsed + "%Y"
                   rescue
                   # catch code at here
                   end
                 end
             
                 # Check array containing date values only
-                if columnDetail[:dataType]=="" then
+                if columnDetail[:dataType] == "" then
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y %m %d")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat="%Y %m %d"
+                    columnDetail[:dateformat]="%Y" + inputFieldSplitterUsed +  "%m" + inputFieldSplitterUsed + "%d"
                   rescue
                     # catch code at here
                   end
                 end
             
                 # Check array containing date values only
-                if columnDetail[:dataType]=="" then
+                if columnDetail[:dataType] == "" then
                   begin
                     isDataInteger=tempArr.collect{|val| Date.strptime(val, "%Y %d %m")}
                     columnDetail[:dataType] = "datetime"
-                    dateformat="%Y %d %m"
+                    columnDetail[:dateformat] = "%Y" + inputFieldSplitterUsed +  "%d" + inputFieldSplitterUsed + "%m"
                   rescue
                     # catch code at here
                   end
                 end
             
                 # Check array containing date values only
-                if columnDetail[:dataType]=="" then
+                if columnDetail[:dataType] == "" then
                   begin
                     isDataInteger=csvData[i].collect{|val| DateTime.parse(val)}
                     columnDetail[:dataType] = "datetime"
