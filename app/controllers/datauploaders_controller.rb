@@ -38,8 +38,9 @@ class DatauploadersController < ApplicationController
   
   def import
     if params[:file] then
-      countTableName = Userfilemapping.where("tablename LIKE :prefix", prefix: "#{params[:file].original_filename.split('.').first}%").count
+      countTableName = Userfilemapping.where("tablename LIKE :prefix", prefix: "#{(params[:file].original_filename.split('.').first).tr(" ","")}%").count
       tableName = countTableName > 0? params[:file].original_filename.split('.').first + "#{countTableName}" : params[:file].original_filename.split('.').first
+      tableName=tableName.tr(" ","")
       addFileDetail =  Userfilemapping.create(
                 user: current_user,
                 filename: params[:file].original_filename,
@@ -58,8 +59,8 @@ class DatauploadersController < ApplicationController
         csvData = []
         CSV.foreach(params[:file].path) do |row|
           csvData.append(row.to_a)
-        end     
-          
+        end
+
         i = 0;
         columnName = ""
         @columnsDetail = []     
@@ -88,10 +89,10 @@ class DatauploadersController < ApplicationController
                   fieldLength: "0",
                   isUnique: true}          
                                            
-          #trim blank spaces at begining and end
+          #trim blank spaces at beginning and end
           csvData[i] = csvData[i].collect{|x| if (x!=nil) then x.strip end}
-          #byebug
-        
+
+          # check column contain more than 1 value of nil and blank
           if ((csvData[i].count(nil) > 1) || (csvData[i].count("") > 1)) then
             columnDetail[:isUnique] = false
           end
@@ -102,7 +103,7 @@ class DatauploadersController < ApplicationController
           
           #removing blank, null and nil values from array
           csvData[i] = csvData[i].reject { |c| c.blank? }
-                   
+          # convert in downcase each value of array
           csvData[i] = csvData[i].map(&:downcase)
                     
           if ((csvData[i].count("null") > 1) && (columnDetail[:isUnique] == true))then
@@ -144,7 +145,6 @@ class DatauploadersController < ApplicationController
                   # catch code at here
                 end
               end
-        
               isDateTime = false
               if (((csvData[i].collect{|v| v.include? '-'}).uniq).include? false)==false then
                 isDateTime = true
@@ -252,25 +252,36 @@ class DatauploadersController < ApplicationController
           @columnsDetail.append(columnDetail)
           i=i+1
         end
-        Datauploader.create_dynamic_table(tableName.downcase.pluralize, @columnsDetail)
-        Datauploader.insertCsvData(params[:file].path, tableName.downcase.pluralize, @columnsDetail)
-        redirect_to showuploadedschema_datauploaders_path({:tableName => tableName.downcase.pluralize}), notice: "Data Uploaded Successfully"
+
+        isTableCreated = Datauploader.create_dynamic_table(tableName.downcase.pluralize, @columnsDetail)
+        #byebug
+        if isTableCreated
+          Datauploader.insertCsvData(params[:file].path, tableName.downcase.pluralize, @columnsDetail)
+          redirect_to showuploadedschema_datauploaders_path({:tableName => tableName.downcase.pluralize}), notice: "Data Uploaded Successfully"
+        else
+          redirect_to new_datauploader_path, :flash => { :error => "Error: #{isTableCreated}" }
+        end
       end      
     else
       redirect_to new_datauploader_path, :flash => { :error => "Please select a file to upload data." }
     end
   end
+  
+  def showuploadedschema
+    @tableName = params[:tableName]
+    @uploadedSchema = Datauploader.getUploadedSchema(@tableName)
+  end
 
   def uploadedfile
-   
     currentUser = current_user.id
     @uploadedFiles = Userfilemapping.where(:user_id =>currentUser )
     respond_with(@uploadedFiles)
-
   end
+
   def uploadfilerecord
     @uploadedRecords=[]
     tableName = params[:tableName]
+    @uploadedSchema = Datauploader.getUploadedSchema(tableName)
     my_sql="SELECT * FROM #{tableName}"
     resultRecords = ActiveRecord::Base.connection.execute(my_sql)
     if resultRecords.size > 0 then
@@ -279,12 +290,21 @@ class DatauploadersController < ApplicationController
         @uploadedRecords.append(result)
       end
     end
-    respond_with(@uploadedRecords)
+    respond_with(@uploadedRecords,@uploadedSchema)
   end
-  
-  def showuploadedschema
+
+  def columndelete
     tableName = params[:tableName]
-    @uploadedSchema = Datauploader.getUploadedSchema(tableName)
+    columnName = params[:columnName]
+    puts tableName
+    puts columnName
+    my_sql="ALTER TABLE #{tableName} DROP COLUMN #{columnName}"
+    puts my_sql
+    resultSet = ActiveRecord::Base.connection.execute(my_sql)
+    respond_to do |format|
+      format.html { redirect_to showuploadedschema_datauploaders_path({:tableName => tableName}), notice: "Column deleted Successfully"  }
+      format.json { head :no_content }
+    end
   end
 
   private

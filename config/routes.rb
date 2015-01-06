@@ -1,10 +1,11 @@
 Rails.application.routes.draw do
   resources :datauploaders do
     collection do
-      post:import
-      get:showuploadedschema
-      get:uploadedfile
-      get:uploadfilerecord
+      post :import
+      get :showuploadedschema
+      get :uploadedfile
+      get :uploadfilerecord
+      delete :columndelete
     end
   end
 

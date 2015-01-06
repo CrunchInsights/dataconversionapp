@@ -14,6 +14,11 @@ class Datauploader < ActiveRecord::Base
                   t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable], precision: (columnStruct[:fieldLength].split(',')[0]).to_i, scale: (columnStruct[:fieldLength].split(',')[1]).to_i
                 when "datetime"
                   t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable]
+                when "integer"
+                  if columnStruct[:isUnique] == true then
+                    uniqueColumns.append(columnStruct[:columnName])
+                  end
+                  t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable]
                 else
                   if columnStruct[:isUnique] == true then
                     uniqueColumns.append(columnStruct[:columnName])
@@ -59,15 +64,25 @@ class Datauploader < ActiveRecord::Base
       tableColStr = tableColumns.map{|col| "#{col}"}.join(", ")
       puts tableColStr
       options = {
-         :chunk_size=>2
+          :row_sep => :auto,
+          :chunk_size=>2,
+          :remove_empty_values => false, :remove_zero_values => false, :remove_values_matching => nil
       }
       SmarterCSV.process(filePath, options) do |chunk|
         chunk.each do |data_hash|
+          puts data_hash
           data_hash = data_hash.to_a
+          puts "******************* after array ************************"
+          puts data_hash
           data_hash = data_hash.transpose
+          puts "******************* after transpose ************************"
+          puts data_hash
           data_hash.shift
-
+          puts "******************* after shift ************************"
+          puts data_hash
           data_hash = data_hash[0].map{|c| "'#{c}'"}.join(", ")
+          puts "******************* after join ************************"
+          puts data_hash
           my_sql="INSERT INTO #{tableName} (#{tableColStr}) Values (#{data_hash})"
           resultSet = ActiveRecord::Base.connection.execute(my_sql)
         end

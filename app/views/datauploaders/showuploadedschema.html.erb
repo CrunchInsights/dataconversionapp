@@ -41,7 +41,7 @@
             <td>
             	<div  >
             		<button type="button" class="btn btn-sm btn-primary">Edit</button>
-            		<button type="button" class="btn btn-sm btn-danger">Delete</button>
+                  <%= link_to "Delete", columndelete_datauploaders_path({:columnName => schema[:Field],:tableName=> @tableName}), method: :delete, data: { confirm: 'Are you sure?' },:type=>"button",:class=>"btn btn-sm btn-danger" %>
             	</div>
             </td>
           </tr>
