@@ -257,7 +257,6 @@ class DatauploadersController < ApplicationController
         end
 
         isTableCreated = Datauploader.create_dynamic_table(tableName.downcase.pluralize, @columnsDetail)
-        #byebug
         if isTableCreated
           Datauploader.insertCsvData(params[:file].path, tableName.downcase.pluralize, @columnsDetail)
           redirect_to showuploadedschema_datauploaders_path({:tableName => tableName.downcase.pluralize}), notice: "Data Uploaded Successfully"
@@ -269,18 +268,20 @@ class DatauploadersController < ApplicationController
       redirect_to new_datauploader_path, :flash => { :error => "Please select a file to upload data." }
     end
   end
-  
+  # show upload csv generated table schema
   def showuploadedschema
     @tableName = params[:tableName]
     @uploadedSchema = Datauploader.getUploadedSchema(@tableName)
+    @disabledColumn = get_usertablecolumninfo(@tableName)
   end
 
+  # find uploaded files details
   def uploadedfile
     currentUser = current_user.id
     @uploadedFiles = Userfilemapping.where(:user_id =>currentUser )
     respond_with(@uploadedFiles)
   end
-
+  # find uploaded file records
   def uploadfilerecord
     @uploadedRecords=[]
     tableName = params[:tableName]
@@ -289,28 +290,62 @@ class DatauploadersController < ApplicationController
     resultRecords = ActiveRecord::Base.connection.execute(my_sql)
     if resultRecords.size > 0 then
       resultRecords.each do |result|
-        #byebug
         @uploadedRecords.append(result)
       end
     end
     respond_with(@uploadedRecords,@uploadedSchema)
   end
-
-  def columndelete
+  def changetablecolumndetail
+    @uploadedRecords=[]
+    respond_with(@uploadedRecords)
+  end
+  def columnexculdeinculde
     tableName = params[:tableName]
     columnName = params[:columnName]
-    puts tableName
-    puts columnName
-    my_sql="ALTER TABLE #{tableName} DROP COLUMN #{columnName}"
-    puts my_sql
-    resultSet = ActiveRecord::Base.connection.execute(my_sql)
+    isColumnDisabled = params[:isColumnDisabled]
+    errors = ""
+    updateColumnInfo = Usertablecolumninformation.where("tablename =? AND columnname = ?", tableName, columnName).first
+    if updateColumnInfo then
+      updateColumnInfo.isdisable = isColumnDisabled
+      updateColumnInfo.save
+    else
+      updateColumnInfo=Usertablecolumninformation.create(
+          tablename: tableName,
+          columnname: columnName,
+          moneyformat:  '',
+          isdisable: isColumnDisabled,
+          created_by: current_user.id,
+          created_on: Time.now ,
+          modified_by: current_user.id,
+          modified_on: Time.now)
+    end
+
+    if updateColumnInfo.errors.any?
+      updateColumnInfo.errors.full_messages.each do |message|
+        errors = errors + message + "\n"
+      end
+    end
+
     respond_to do |format|
-      format.html { redirect_to showuploadedschema_datauploaders_path({:tableName => tableName}), notice: "Column deleted Successfully"  }
+      format.html { redirect_to showuploadedschema_datauploaders_path({:tableName => tableName}), notice: (errors.size ==0 ? "Column detail update Successfully":errors)  }
       format.json { head :no_content }
     end
+
   end
 
   private
+
+    def get_usertablecolumninfo(tableName)
+      tableColumnInfo = Usertablecolumninformation.where("tablename =? and isdisable =?", tableName, 1)
+      disabledColumn=[]
+      if tableColumnInfo.size > 0 then
+        tableColumnInfo.each do |column|
+          disabledColumn.append(column.columnname)
+        end
+      end
+      return disabledColumn
+    end
+
     def set_datauploader
       @datauploader = Datauploader.find(params[:id])
     end

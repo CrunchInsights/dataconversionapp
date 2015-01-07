@@ -14,13 +14,13 @@
   <tbody>
   <% if @uploadedRecords.size > 0 then %>
     <% @uploadedRecords.each do |result|  %>
-        <tr>
-          <% result.each do |record|%>
-              <td>
-                <%=record%>
-              </td>
-          <%end%>
-        </tr>
+            <tr>
+              <% result.each do |record|%>
+                  <td>
+                    <%=record%>
+                  </td>
+              <%end%>
+            </tr>
     <%end%>
   <% end %>
   </tbody>

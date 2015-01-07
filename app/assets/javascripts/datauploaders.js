@@ -1,3 +1,4 @@
+//use for file upload action , only allow csv format
 $('#file').change(function(){
 	var fileType = 'comma-separated-values,vnd.ms-excel';
 	var isCorrectType = false;
@@ -19,9 +20,16 @@ $('#file').change(function(){
         }
     }
 });
-
-
 $(document).ready(function() {
-    $('.dropdown-toggle').dropdown();
-    $('.dataTable').DataTable();
+    $('.dropdown-toggle').dropdown();//use for top menu dropdown
+    $('.dataTable').DataTable();//use for simple table into datatable
+
 } );
+//Edit button click on table schema screen
+function editbuttonclick(view){
+    var tr =$(view).closest('tr');
+    (tr.find('td[isEditable="yes"]')).find('div[isDefault="yes"]').hide();
+    (tr.find('td[isEditable="yes"]')).find('div.form-group').show();
+    (tr.find('td[isbuttoncolumn="yes"]')).find('button[buttontype="edit"]').hide();
+    (tr.find('td[isbuttoncolumn="yes"]')).find('a[buttontype="save"]').show();
+}

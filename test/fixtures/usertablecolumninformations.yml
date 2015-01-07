@@ -1,0 +1,21 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  tablename: MyString
+  columnname: MyString
+  moneyformat: MyString
+  isdisable: false
+  created_by: 1
+  created_on: 2015-01-06 16:34:20
+  modified_by: 1
+  modified_on: 2015-01-06 16:34:20
+
+two:
+  tablename: MyString
+  columnname: MyString
+  moneyformat: MyString
+  isdisable: false
+  created_by: 1
+  created_on: 2015-01-06 16:34:20
+  modified_by: 1
+  modified_on: 2015-01-06 16:34:20
