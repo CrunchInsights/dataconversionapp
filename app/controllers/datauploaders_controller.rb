@@ -1,41 +1,5 @@
 class DatauploadersController < ApplicationController
-  before_action :set_datauploader, only: [:show, :edit, :update, :destroy]
-
   respond_to :html
-
-  def index
-    @datauploaders = Datauploader.all
-    respond_with(@datauploaders)
-  end
-
-  def show
-    respond_with(@datauploader)
-  end
-
-  def new
-    @datauploader = Datauploader.new    
-    respond_with(@datauploader)
-  end
-
-  def edit
-  end
-
-  def create
-    @datauploader = Datauploader.new(datauploader_params)
-    @datauploader.save
-    respond_with(@datauploader)
-  end
-
-  def update
-    @datauploader.update(datauploader_params)
-    respond_with(@datauploader)
-  end
-
-  def destroy
-    @datauploader.destroy
-    respond_with(@datauploader)
-  end
-  
   def import
     if params[:file] then
       countTableName = Userfilemapping.where("tablename LIKE :prefix", prefix: "#{(params[:file].original_filename.split('.').first).tr(" ","")}%").count
@@ -272,11 +236,16 @@ class DatauploadersController < ApplicationController
       redirect_to new_datauploader_path, :flash => { :error => "Please select a file to upload data." }
     end
   end
+
   # show upload csv generated table schema
   def showuploadedschema
     @tableName = params[:tableName]
     @uploadedSchema = Datauploader.getUploadedSchema(@tableName)
-    @disabledColumn = get_usertablecolumninfo(@tableName)
+    if @uploadedSchema.size>0
+      @disabledColumn = get_usertablecolumninfo(@tableName)
+    else
+      redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema not exists" }
+    end
   end
 
   # find uploaded files details
@@ -285,24 +254,32 @@ class DatauploadersController < ApplicationController
     @uploadedFiles = Userfilemapping.where(:user_id =>currentUser )
     respond_with(@uploadedFiles)
   end
+
   # find uploaded file records
   def uploadfilerecord
     @uploadedRecords=[]
     tableName = params[:tableName]
     @uploadedSchema = Datauploader.getUploadedSchema(tableName)
-    my_sql="SELECT * FROM #{tableName}"
-    resultRecords = ActiveRecord::Base.connection.execute(my_sql)
-    if resultRecords.size > 0 then
-      resultRecords.each do |result|
-        @uploadedRecords.append(result)
+    if @uploadedSchema.size>0
+      my_sql="SELECT * FROM #{tableName}"
+      resultRecords = ActiveRecord::Base.connection.execute(my_sql)
+      if resultRecords.size > 0 then
+        resultRecords.each do |result|
+          @uploadedRecords.append(result)
+        end
       end
+      respond_with(@uploadedRecords,@uploadedSchema)
+    else
+      redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema not exists" }
     end
-    respond_with(@uploadedRecords,@uploadedSchema)
+
   end
+
   def changetablecolumndetail
     @uploadedRecords=[]
     respond_with(@uploadedRecords)
   end
+
   def columnexculdeinculde
     tableName = params[:tableName]
     columnName = params[:columnName]
@@ -338,7 +315,6 @@ class DatauploadersController < ApplicationController
   end
 
   private
-
     def get_usertablecolumninfo(tableName)
       tableColumnInfo = Usertablecolumninformation.where("tablename =? and isdisable =?", tableName, 1)
       disabledColumn=[]
@@ -348,13 +324,5 @@ class DatauploadersController < ApplicationController
         end
       end
       return disabledColumn
-    end
-
-    def set_datauploader
-      @datauploader = Datauploader.find(params[:id])
-    end
-
-    def datauploader_params
-      params[:datauploader]
     end
 end

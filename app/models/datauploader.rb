@@ -35,19 +35,23 @@ class Datauploader < ActiveRecord::Base
 
   def self.getUploadedSchema(tableName)
     uploadedSchema = []
-    my_sql = "DESC #{tableName}"
-    resultSet = ActiveRecord::Base.connection.execute(my_sql)
-    if resultSet.size > 0 then
-      resultSet.each do |result|
-        resultSchema = {}
-        resultSchema[:Field] = result[0]
-        resultSchema[:Type] = result[1]
-        resultSchema[:Null] = result[2]
-        resultSchema[:Key] = result[3]
-        uploadedSchema.append(resultSchema)
+    begin
+      my_sql = "DESC #{tableName}"
+      resultSet = ActiveRecord::Base.connection.execute(my_sql)
+      if resultSet.size > 0 then
+        resultSet.each do |result|
+          resultSchema = {}
+          resultSchema[:Field] = result[0]
+          resultSchema[:Type] = result[1]
+          resultSchema[:Null] = result[2]
+          resultSchema[:Key] = result[3]
+          uploadedSchema.append(resultSchema)
+        end
       end
+      return uploadedSchema
+    rescue
+      return uploadedSchema
     end
-    return uploadedSchema
   end
 
   def self.insertCsvData(filePath, tableName, columnStructureObject)
