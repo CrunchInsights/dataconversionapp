@@ -2,7 +2,7 @@ class DatauploadersController < ApplicationController
   respond_to :html
   def import
     if params[:file] then
-      countTableName = Userfilemapping.where("tablename LIKE :prefix", prefix: "#{(params[:file].original_filename.split('.').first).tr(" ","")}%").count
+      countTableName = Userfilemapping.where("tablename LIKE ? OR tablename LIKE ?", "#{(params[:file].original_filename.split('.').first).tr(" ","")}%", "#{(params[:file].original_filename.split('.').first.pluralize).tr(" ","")}%").count
       tableName = countTableName > 0? params[:file].original_filename.split('.').first + "#{countTableName}" : params[:file].original_filename.split('.').first
       tableName=tableName.tr(" ","")
       addFileDetail =  Userfilemapping.create(
@@ -54,6 +54,9 @@ class DatauploadersController < ApplicationController
                             dataType: "",
                             dateformat:"",
                             fieldLength: "0",
+                            moneySymbol: "",
+                            isMoneyFormat: false,
+                            moneySymbolPosition: "",
                             isUnique: true}
 
             #trim blank spaces at beginning and end
@@ -191,6 +194,43 @@ class DatauploadersController < ApplicationController
                   end
                 end
 
+                # check array containing money format
+                if columnDetail[:dataType]=="" then
+                  begin
+                    moneySymbol = ''
+                    symbolLength = 0
+                    #byebug
+                    money_symbols = ['$','€','£','¥','Fr','kr','zł','Ft','Kč','A$','R$','RM','₱','NT$','฿', 'TRY', '₹']
+                    money_symbols.each do |symbol|
+                      symbolLength = symbol.size
+
+                      if (csvData[i].collect{|k| k[0...symbolLength]}.uniq)[0] == symbol then
+                        moneySymbol = symbol
+                        columnDetail[:isMoneyFormat] = true
+                        columnDetail[:moneySymbolPosition] = "start"
+                        break
+                      end
+                      if (csvData[i].collect{|k| k[(k.size-symbolLength)...k.size]}.uniq)[0] == symbol then
+                        moneySymbol = symbol
+                        columnDetail[:isMoneyFormat] = true
+                        columnDetail[:moneySymbolPosition] = "end"
+                        break
+                      end
+                    end
+                    if moneySymbol != '' then
+                      tempArr = csvData[i].collect{|x| x.tr(moneySymbol, '').strip}
+                      isDataInteger=tempArr.collect{|val| Float(val.gsub(/,/,''))}
+                      maxLengthAfterDecimal = (((tempArr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      maxLengthBeforeDecimal = (((tempArr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      columnDetail[:fieldLength] = (maxLengthBeforeDecimal + maxLengthAfterDecimal + 1).to_s + "," + maxLengthAfterDecimal.to_s
+                      columnDetail[:dataType] = "decimal"
+                      columnDetail[:moneySymbol] = moneySymbol
+                    end
+                  rescue
+                    # catch code at here
+                  end
+                end
+
                 # Check array containing float values only
                 if columnDetail[:dataType]=="" then
                   begin
@@ -213,7 +253,6 @@ class DatauploadersController < ApplicationController
                     # catch code at here
                   end
                 end
-
                 if columnDetail[:dataType]!= "decimal" then
                   columnDetail[:fieldLength] = ((csvData[i].group_by(&:size).max.last)[0].size) + 1
                 end
@@ -222,9 +261,24 @@ class DatauploadersController < ApplicationController
             @columnsDetail.append(columnDetail)
             i=i+1
           end
-
           isTableCreated = Datauploader.create_dynamic_table(tableName.downcase.pluralize, @columnsDetail)
           if isTableCreated
+            begin
+              @columnsDetail.each do |column|
+                if column[:isMoneyFormat]==true
+                  updateColumnInfo=Usertablecolumninformation.create(
+                      tablename: tableName.downcase.pluralize,
+                      columnname: column[:columnName],
+                      moneyformat:  column[:moneySymbol],
+                      isdisable: false,
+                      created_by: current_user.id,
+                      created_on: Time.now ,
+                      modified_by: current_user.id,
+                      modified_on: Time.now)
+                end
+              end
+            rescue
+            end
             Datauploader.insertCsvData(params[:file].path, tableName.downcase.pluralize, @columnsDetail)
             redirect_to showuploadedschema_datauploaders_path({:tableName => tableName.downcase.pluralize}), notice: "Data Uploaded Successfully"
           else
@@ -257,6 +311,7 @@ class DatauploadersController < ApplicationController
 
   # find uploaded file records
   def uploadfilerecord
+    @tableRecord={columns:[], records:[] }
     @uploadedRecords=[]
     tableName = params[:tableName]
     @uploadedSchema = Datauploader.getUploadedSchema(tableName)
@@ -264,11 +319,17 @@ class DatauploadersController < ApplicationController
       my_sql="SELECT * FROM #{tableName}"
       resultRecords = ActiveRecord::Base.connection.execute(my_sql)
       if resultRecords.size > 0 then
-        resultRecords.each do |result|
-          @uploadedRecords.append(result)
+
+        disabledColumn = get_usertablecolumninfo(tableName)
+        @uploadedSchema.each do |sehema|
+          @tableRecord[:columns].append({columnname: sehema[:Field],isdisable: (disabledColumn.include?sehema[:Field]) })
         end
+        resultRecords.each do |result|
+          @tableRecord[:records].append(result)
+        end
+
       end
-      respond_with(@uploadedRecords,@uploadedSchema)
+      respond_with(@uploadedRecords,@uploadedSchema,@tableRecord)
     else
       redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema not exists" }
     end

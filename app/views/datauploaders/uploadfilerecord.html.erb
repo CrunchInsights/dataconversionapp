@@ -2,18 +2,18 @@
 <table id="uploadedRecords" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
   <thead>
   <tr>
-    <% if @uploadedSchema.size > 0 then %>
-        <% @uploadedSchema.each do |schema|  %>
+    <% if @tableRecord[:columns].size > 0 then %>
+        <% @tableRecord[:columns].each do |column|  %>
                 <td>
-                  <%= schema[:Field] %>
+                  <%= column[:columnname] %>
                 </td>
       <%end%>
   <% end %>
   </tr>
   </thead>
   <tbody>
-  <% if @uploadedRecords.size > 0 then %>
-    <% @uploadedRecords.each do |result|  %>
+  <% if @tableRecord[:records].size > 0 then %>
+    <% @tableRecord[:records].each do |result|  %>
             <tr>
               <% result.each do |record|%>
                   <td>
@@ -25,5 +25,4 @@
   <% end %>
   </tbody>
 </table>
-
 <%= javascript_include_tag('datauploaders.js') %>

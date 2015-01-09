@@ -14,6 +14,11 @@ class Datauploader < ActiveRecord::Base
                   t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable], precision: (columnStruct[:fieldLength].split(',')[0]).to_i, scale: (columnStruct[:fieldLength].split(',')[1]).to_i
                 when "datetime"
                   t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable]
+                when "integer"
+                  if columnStruct[:isUnique] == true then
+                    uniqueColumns.append(columnStruct[:columnName])
+                  end
+                  t.column columnStruct[:columnName], columnStruct[:dataType], null: columnStruct[:isNullable]
                 else
                   if columnStruct[:isUnique] == true then
                     uniqueColumns.append(columnStruct[:columnName])
@@ -57,14 +62,10 @@ class Datauploader < ActiveRecord::Base
   def self.insertCsvData(filePath, tableName, columnStructureObject)
     if columnStructureObject.size > 0 then
       tableColumns = []
-      #puts "11111111111111111111"
-      #puts columnStructureObject
       columnStructureObject.each do |columnName|       
         tableColumns.append(columnName[:columnName])
       end
       tableColStr = tableColumns.map{|col| "#{col}"}.join(", ")
-      #puts "22222222222222222222222222222"
-      #puts tableColStr
       options = {
          :row_sep => :auto,
          :chunk_size => 2,
@@ -94,7 +95,12 @@ class Datauploader < ActiveRecord::Base
               elsif columnStructureObject[i][:dataType] == "integer" then
                 insertedRowString = insertedRowString + insertedRowValue.to_s.to_s + ", "
               elsif columnStructureObject[i][:dataType] == "decimal" then
-                insertedRowString = insertedRowString + "'" + insertedRowValue.to_s.to_s + "', "
+                if columnStructureObject[i][:isMoneyFormat] == true then
+                  insertedRowValue = insertedRowValue.to_s.tr(columnStructureObject[i][:moneySymbol],'').strip
+                  insertedRowString = insertedRowString + "'" + insertedRowValue.gsub(/,/,'').to_s + "', "
+                else
+                  insertedRowString = insertedRowString + "'" + insertedRowValue.to_s + "', "
+                end
               elsif columnStructureObject[i][:dataType] == "string" then
                 insertedRowString = insertedRowString + "'" + insertedRowValue.strip.to_s + "', "
               elsif columnStructureObject[i][:dataType] == "boolean" then
