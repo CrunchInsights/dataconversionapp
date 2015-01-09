@@ -1,5 +1,6 @@
 <h1>Trend Analysis</h1>
-<table id="trendAnalysisPrimary" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
+<div class="trendAnalysisChart"></div>
+<table id="trendAnalysisPrimary" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable table-sparkline">
   <thead>
   <tr>
     <th style="width: 250px">Column Name</th>
@@ -10,7 +11,7 @@
     <th>Result</th>
   </tr>
   </thead>
-    <tbody>
+    <tbody id="tbody-sparkline">
       <% if @tableRecord.size > 0 then %>
           <% @tableRecord.each do |recordAnalysis| %>
               <tr>
@@ -43,13 +44,11 @@
                       <% end %>
                   <% end %>
                 </td>
-                <td>
-
-                  <div class="rowChart"></div>
-                </td>
+                <td data-sparkline="<%= recordAnalysis[:record].join(', ') %> ; column"></td>
               </tr>
           <% end %>
       <% end %>
     </tbody>
   </table>
 <%= javascript_include_tag('datauploaders.js') %>
+<%= javascript_include_tag('highChartsCalc.js') %>

@@ -18,6 +18,7 @@
 //= require bootstrap
 //= require alertify.min
 //= require jquery.dataTables.min
+//= require highcharts
 
 
 //Write comman javascript code at here for all over application use
