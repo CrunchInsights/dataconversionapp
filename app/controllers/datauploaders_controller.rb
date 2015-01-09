@@ -319,7 +319,6 @@ class DatauploadersController < ApplicationController
       my_sql="SELECT * FROM #{tableName}"
       resultRecords = ActiveRecord::Base.connection.execute(my_sql)
       if resultRecords.size > 0 then
-
         disabledColumn = get_usertablecolumninfo(tableName)
         @uploadedSchema.each do |sehema|
           @tableRecord[:columns].append({columnname: sehema[:Field],isdisable: (disabledColumn.include?sehema[:Field]) })
@@ -375,6 +374,7 @@ class DatauploadersController < ApplicationController
 
   end
 
+=begin
   private
     def get_usertablecolumninfo(tableName)
       tableColumnInfo = Usertablecolumninformation.where("tablename =? and isdisable =?", tableName, 1)
@@ -386,4 +386,5 @@ class DatauploadersController < ApplicationController
       end
       return disabledColumn
     end
+=end
 end

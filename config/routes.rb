@@ -9,7 +9,11 @@ Rails.application.routes.draw do
       delete :columnexculdeinculde
     end
   end
-
+  resources :recordtrend do
+    collection do
+      get :simpletrend
+    end
+  end
   devise_for :users
   get 'welcome/index'
   
