@@ -44,7 +44,7 @@
                       <% end %>
                   <% end %>
                 </td>
-                <td data-sparkline="<%= recordAnalysis[:record].join(', ') %> ; column"></td>
+                <td data-sparkline="<%= (recordAnalysis.to_json).to_s %> ; column"></td>
               </tr>
           <% end %>
       <% end %>
