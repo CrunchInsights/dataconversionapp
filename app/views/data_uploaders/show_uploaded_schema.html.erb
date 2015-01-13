@@ -1,0 +1,95 @@
+<h1>Uploaded Data Schema</h1>
+<h3>Fields included in Data Insight</h3>
+<div class="row">
+  <%= link_to "Trend Analysis", simpletrend_recordtrends_path({:table_name=> @table_name}),:buttontype=>"save",:type=>"button",:class=>"btn btn-sm btn-primary" %>
+</div>
+<table id="enabledUploadedSchema" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
+  <thead>
+      <tr>
+        <th style="width: 250px">Column Name</th>
+        <th style="width: 250px">Type</th>
+        <th>Null</th>
+        <th>Unique</th>
+        <th style="width: 90px">Action</th>
+      </tr>
+  </thead>
+  <tbody>
+    <% if @uploaded_schema.size > 0 then %>
+        <% @uploaded_schema.each do |schema| %>
+          <% if !(@disabled_column.include? schema[:Field]) %>
+              <tr>
+                <td isEditable="yes">
+                  <div isDefault="yes"><%= schema[:Field] %></div>
+                  <div class="form-group" style="margin-bottom: 0;display: none">
+                    <input type="text" class="form-control" value="<%= schema[:Field] %>">
+                  </div>
+                </td>
+                <td isEditable="yes">
+                  <div isDefault="yes"><%= schema[:Type] %></div>
+                  <div class="form-group" style="margin-bottom: 0; display: none">
+                    <select class="form-control">
+                      <option <%= ((schema[:Type]).include? "varchar")?"selected":"" %>>string</option>
+                      <option <%= ((schema[:Type]).include? "int")?"selected":""%> >integer</option>
+                      <option <%= ((schema[:Type]).include? "decimal")?"selected":""%> >decimal</option>
+                      <option <%= ((schema[:Type]).include? "datetime")?"selected":"" %> >datetime</option>
+                      <option <%= ((schema[:Type]).include? "boolean")?"selected":"" %> >boolean</option>
+                    </select>
+                  </div>
+                </td>
+                <td><%= schema[:Null] %><input  type="text" style="display: none"/></td>
+                <td>
+                  <% if schema[:Key] == "UNI" then %>
+                      UNIQUE <input  type="text" style="display: none"/>
+                  <% end %>
+                </td>
+                <td isbuttoncolumn="yes">
+                  <div>
+                    <button  type="button" class="btn btn-sm btn-primary" buttontype="edit" onclick="editbuttonclick(this);">Edit</button>
+                    <%= link_to "Save", changetablecolumndetail_datauploaders_path({:columnName => schema[:Field],:tableName=> @tableName,:isColumnDisabled=>true}), data: { confirm: 'Are you sure?' },:buttontype=>"save",:style=>"display: none",:type=>"button",:class=>"btn btn-sm btn-success" %>
+                    <%= link_to "Exclude", columnexcludeinclude_datauploaders_path({:column_name => schema[:Field], :table_name=> @table_name, :is_column_disabled=>true}), method: :delete, data: { confirm: 'Are you sure?' }, :type=>"button", :class=>"btn btn-sm btn-danger" %>
+                  </div>
+                </td>
+              </tr>
+          <% end %>
+        <% end %>
+    <% end %>
+  </tbody>
+</table>
+<% if @disabled_column.size > 0 then %>
+    <h3>Fields excluded in Data Insight</h3>
+    <table id="disabledUploadedSchema" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
+      <thead>
+      <tr>
+        <th style="width: 250px">Column Name</th>
+        <th style="width: 250px">Type</th>
+        <th>Null</th>
+        <th>Unique</th>
+        <th style="width: 90px">Action</th>
+      </tr>
+      </thead>
+      <tbody>
+          <% if @uploaded_schema.size > 0 then %>
+              <% @uploaded_schema.each do |schema| %>
+                  <% if @disabled_column.include? schema[:Field] %>
+                      <tr>
+                        <td><%= schema[:Field] %></td>
+                        <td><%= schema[:Type]%></td>
+                        <td><%= schema[:Null] %><input  type="text" style="display: none"/></td>
+                        <td>
+                          <% if schema[:Key] == "UNI" then %>
+                              UNIQUE
+                          <% end %>
+                        </td>
+                        <td>
+                          <div>
+                            <%= link_to "Include", columnexcludeinclude_datauploaders_path({:column_name => schema[:Field], :table_name=> @table_name, :is_column_disabled=>false}), method: :delete, data: { confirm: 'Are you sure?' }, :type=>"button", :class=>"btn btn-sm btn-success" %>
+                          </div>
+                        </td>
+                      </tr>
+                  <% end %>
+              <% end %>
+          <% end %>
+      </tbody>
+    </table>
+<% end %>
+<%= javascript_include_tag('datauploaders.js') %>

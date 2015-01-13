@@ -1,0 +1,28 @@
+<h3>File Records</h3>
+<table id="uploadedRecords" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
+  <thead>
+  <tr>
+    <% if @table_record[:columns].size > 0 then %>
+        <% @table_record[:columns].each do |column|  %>
+                <td>
+                  <%= column[:column_name] %>
+                </td>
+      <%end%>
+  <% end %>
+  </tr>
+  </thead>
+  <tbody>
+  <% if @table_record[:records].size > 0 then %>
+    <% @table_record[:records].each do |result|  %>
+            <tr>
+              <% result.each do |record|%>
+                  <td>
+                    <%=record%>
+                  </td>
+              <%end%>
+            </tr>
+    <%end%>
+  <% end %>
+  </tbody>
+</table>
+<%= javascript_include_tag('datauploaders.js') %>
