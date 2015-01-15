@@ -40,16 +40,40 @@ class DataUploader < ActiveRecord::Base
   def self.get_uploaded_schema(table_name)
     uploaded_schema = []
     begin
-      my_sql = "DESC #{table_name}"
+      my_sql= "Select temp.column_name as field, temp.data_type as field_data_type_long, temp.character_maximum_length as field_length,
+      temp.is_nullable as nullable, temp.udt_name as type,
+      CASE
+      WHEN temp2.indisprimary = 't' THEN 'PRIMARY'
+      WHEN temp2.indisunique = 't' THEN 'UNIQUE'
+      ELSE ''
+      END AS key
+      from (select isc.column_name, isc.data_type, isc.character_maximum_length, isc.is_nullable, isc.udt_name
+      from INFORMATION_SCHEMA.COLUMNS isc WHERE isc.table_name = '#{table_name}') as temp
+      LEFT JOIN (SELECT pga.attname, pgi.indisunique, pgi.indisprimary
+      FROM pg_index pgi
+      LEFT JOIN pg_class pgc
+      ON pgi.indrelid  = pgc.oid
+      LEFT JOIN pg_attribute pga
+      ON pga.attrelid = pgc.oid
+      AND pga.attnum = ANY(indkey)
+      WHERE pgc.relname =  '#{table_name}' ) as temp2
+      ON temp.column_name = temp2.attname;"
+      #my_sql = "DESC"
+
       result_set = ActiveRecord::Base.connection.execute(my_sql)
+
+      result_set=result_set.to_a
       if result_set.size > 0
         result_set.each do |result|
+          puts result
+          puts "******************** result ***********************"
           result_schema = {}
-          result_schema[:Field] = result[0]
-          result_schema[:Type] = result[1]
-          result_schema[:Null] = result[2]
-          result_schema[:Key] = result[3]
+          result_schema[:Field] = result["field"]
+          result_schema[:Type] = result["type"]
+          result_schema[:Null] = result["nullable"]
+          result_schema[:Key] = result["key"]
           uploaded_schema.append(result_schema)
+
         end
       end
       return uploaded_schema

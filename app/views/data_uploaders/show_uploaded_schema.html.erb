@@ -36,11 +36,9 @@
                     </select>
                   </div>
                 </td>
-                <td><%= schema[:Null] %><input  type="text" style="display: none"/></td>
+                <td><%= schema[:Null] %></td>
                 <td>
-                  <% if schema[:Key] == "UNI" then %>
-                      UNIQUE <input  type="text" style="display: none"/>
-                  <% end %>
+                  <%= schema[:Key] %>
                 </td>
                 <td isbuttoncolumn="yes">
                   <div>

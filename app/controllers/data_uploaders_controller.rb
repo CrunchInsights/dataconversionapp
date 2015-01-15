@@ -294,6 +294,8 @@ class DataUploadersController < ApplicationController
   def show_uploaded_schema
     @table_name = params[:table_name]
     @uploaded_schema = DataUploader.get_uploaded_schema(@table_name)
+    puts @uploaded_schema
+    puts '************** at controller uploaded_schema *************'
     if @uploaded_schema.size>0
       @disabled_column = get_user_table_column_info(@table_name)
     else

@@ -5,7 +5,8 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
 
   def get_user_table_column_info(table_name)
-    table_column_info = UserTableColumnInformation.where("table_name =? and is_disable =?", table_name, 1)
+    table_column_info = UserTableColumnInformation.where("table_name =? and is_disable =?", table_name, true)
+    table_column_info=table_column_info.to_a
     disabled_column = []
     if table_column_info.size > 0 then
       table_column_info.each do |column|
