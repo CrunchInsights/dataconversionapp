@@ -14,13 +14,13 @@
   <tbody>
   <% if @table_record[:records].size > 0 then %>
     <% @table_record[:records].each do |result|  %>
-            <tr>
-              <% result.each do |record|%>
-                  <td>
-                    <%=record%>
-                  </td>
-              <%end%>
-            </tr>
+        <tr>
+          <% result.each do |record|%>
+              <td>
+                <%=record[1]%>
+              </td>
+          <%end%>
+        </tr>
     <%end%>
   <% end %>
   </tbody>

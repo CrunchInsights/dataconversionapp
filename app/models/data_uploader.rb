@@ -14,12 +14,12 @@ class DataUploader < ActiveRecord::Base
                 when 'datetime'
                   t.column column_struct[:column_name], column_struct[:data_type], null: column_struct[:is_nullable]
                 when 'integer'
-                  if column_struct[:isUnique] == true then
+                  if column_struct[:is_unique] == true then
                     unique_columns.append(column_struct[:column_name])
                   end
                   t.column column_struct[:column_name], column_struct[:data_type], null: column_struct[:is_nullable]
                 else
-                  if column_struct[:isUnique] == true then
+                  if column_struct[:is_unique] == true then
                     unique_columns.append(column_struct[:column_name])
                   end
                   t.column column_struct[:column_name], column_struct[:data_type], null: column_struct[:is_nullable], limit: column_struct[:field_length]
@@ -65,8 +65,6 @@ class DataUploader < ActiveRecord::Base
       result_set=result_set.to_a
       if result_set.size > 0
         result_set.each do |result|
-          puts result
-          puts "******************** result ***********************"
           result_schema = {}
           result_schema[:Field] = result["field"]
           result_schema[:Type] = result["type"]
@@ -128,21 +126,21 @@ class DataUploader < ActiveRecord::Base
                 inserted_row_string = inserted_row_string + "'" + inserted_row_value.strip.to_s + "', "
               elsif column_structure_object[i][:data_type] == "boolean" then
                 if inserted_row_value == 'on' then
-                  inserted_row_string = inserted_row_string + 1.to_s + ", "
+                  inserted_row_string = inserted_row_string + true.to_s + ", "
                 elsif inserted_row_value == 'off' then
-                  inserted_row_string = inserted_row_string + 0.to_s + ", "
-                elsif inserted_row_value == 'true' then
-                  inserted_row_string = inserted_row_string + 1.to_s + ", "
-                elsif inserted_row_value == 'false' then
-                  inserted_row_string = inserted_row_string + 0.to_s + ", "
+                  inserted_row_string = inserted_row_string + false.to_s + ", "
+                elsif inserted_row_value == 1 then
+                  inserted_row_string = inserted_row_string + true.to_s + ", "
+                elsif inserted_row_value == 0 then
+                  inserted_row_string = inserted_row_string + false.to_s + ", "
                 elsif inserted_row_value == 'yes' then
-                  inserted_row_string = inserted_row_string + 1.to_s + ", "
+                  inserted_row_string = inserted_row_string + true.to_s + ", "
                 elsif inserted_row_value == 'no' then
-                  inserted_row_string = inserted_row_string + 0.to_s + ", "
+                  inserted_row_string = inserted_row_string + false.to_s + ", "
                 elsif inserted_row_value == '1' then
-                  inserted_row_string = inserted_row_string + 1.to_s + ", "
+                  inserted_row_string = inserted_row_string + true.to_s + ", "
                 elsif inserted_row_value == '0' then
-                  inserted_row_string = inserted_row_string + 0.to_s + ", "
+                  inserted_row_string = inserted_row_string + false.to_s + ", "
                 else
                   inserted_row_string = inserted_row_string + inserted_row_value.to_s.strip + ", "
                 end
@@ -163,7 +161,7 @@ class DataUploader < ActiveRecord::Base
     begin
       my_sql="SELECT * FROM #{table_name}"
       result = ActiveRecord::Base.connection.execute(my_sql)
-      return result
+      return result.to_a
     rescue Exception => err
       return result
     end

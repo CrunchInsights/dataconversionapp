@@ -7,10 +7,10 @@ class DataUploadersController < ApplicationController
 
   def import
     if params[:file] then
-      count_table_name = UserFileMapping.where('table_name LIKE ? OR table_name LIKE ?', "#{(params[:file].original_filename.split('.').first).tr(" ","")}%", "#{(params[:file].original_filename.split('.').first.pluralize).tr(" ","")}%").count
-      table_name = count_table_name > 0? params[:file].original_filename.split('.').first + "#{count_table_name}" : params[:file].original_filename.split('.').first
-      table_name = table_name.tr(" ","").gsub(/[^0-9A-Za-z]/, '')
-      add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, params[:file].original_filename, table_name.downcase.pluralize)
+      uploaded_file_name = params[:file].original_filename.split('.').first.tr(" ","").gsub(/[^0-9A-Za-z]/, '').downcase
+      count_table_name = UserFileMapping.where('Lower(table_name) LIKE ? OR Lower(table_name) LIKE ?', "#{uploaded_file_name}%", "#{(uploaded_file_name.pluralize)}%").count
+      table_name = count_table_name > 0? uploaded_file_name + "#{count_table_name}" : uploaded_file_name
+      add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name.downcase.pluralize)
       if add_file_detail.errors.any?
         errors = ""
         add_file_detail.errors.full_messages.each do |message|
@@ -294,8 +294,6 @@ class DataUploadersController < ApplicationController
   def show_uploaded_schema
     @table_name = params[:table_name]
     @uploaded_schema = DataUploader.get_uploaded_schema(@table_name)
-    puts @uploaded_schema
-    puts '************** at controller uploaded_schema *************'
     if @uploaded_schema.size>0
       @disabled_column = get_user_table_column_info(@table_name)
     else
