@@ -161,7 +161,7 @@ class DataUploader < ActiveRecord::Base
     begin
       my_sql="SELECT * FROM #{table_name}"
       result = ActiveRecord::Base.connection.execute(my_sql)
-      return result.to_a
+      return result
     rescue Exception => err
       return result
     end

@@ -3,8 +3,8 @@ class TrendAnalysis < ActiveRecord::Base
     # find only enable column's records
     my_sql="SELECT #{(data.collect{|obj| obj[:column_name]}).join(', ')} FROM #{table_name}"
     records = ActiveRecord::Base.connection.execute(my_sql)
-    if records.size > 0 then
-      records.each do |result|
+    if records.to_a.size > 0 then
+      records.values.each do |result|
         i=0
         result.each do |per_field_value|
           data[i][:record].append(per_field_value)

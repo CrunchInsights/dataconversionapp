@@ -25,10 +25,10 @@ $(function(){
 });
 
 //Edit button click on table schema screen
-function editbuttonclick(view){
+function edit_button_click(view){
     var tr =$(view).closest('tr');
-    (tr.find('td[isEditable="yes"]')).find('div[isDefault="yes"]').hide();
-    (tr.find('td[isEditable="yes"]')).find('div.form-group').show();
-    (tr.find('td[isbuttoncolumn="yes"]')).find('button[buttontype="edit"]').hide();
-    (tr.find('td[isbuttoncolumn="yes"]')).find('a[buttontype="save"]').show();
+    (tr.find('td[is_editable = "yes"]')).find('div[is_default = "yes"]').hide();
+    (tr.find('td[is_editable = "yes"]')).find('div.form-group').show();
+    (tr.find('td[is_button_column="yes"]')).find('button[button_type = "edit"]').hide();
+    (tr.find('td[is_button_column="yes"]')).find('a[button_type = "save"]').show();
 }

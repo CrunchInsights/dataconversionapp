@@ -4,9 +4,9 @@
   <tr>
     <% if @table_record[:columns].size > 0 then %>
         <% @table_record[:columns].each do |column|  %>
-                <td>
-                  <%= column[:column_name] %>
-                </td>
+            <td>
+              <%= column[:column_name] %>
+            </td>
       <%end%>
   <% end %>
   </tr>
@@ -16,8 +16,12 @@
     <% @table_record[:records].each do |result|  %>
         <tr>
           <% result.each do |record|%>
-              <td>
-                <%=record[1]%>
+              <td><%if @table_record[:columns][result.index(record)][:type] == "bool" then %>
+                        <% if record == "t" then %> TRUE
+                        <%elsif record == "f" then %>FALSE
+                        <% else %><%= record %><% end %>
+                  <% else %><%= record %>
+                  <% end %>
               </td>
           <%end%>
         </tr>

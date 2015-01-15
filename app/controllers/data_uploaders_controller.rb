@@ -316,12 +316,12 @@ class DataUploadersController < ApplicationController
     @uploadedSchema = DataUploader.get_uploaded_schema(table_name)
     if @uploadedSchema.size>0
       response = DataUploader.get_table_data(table_name)
-      if response.size > 0 then
+      if response.to_a.size > 0 then
         disabled_column = get_user_table_column_info(table_name)
         @uploadedSchema.each do |schema|
-          @table_record[:columns].append({column_name: schema[:Field],is_disable: (disabled_column.include?schema[:Field]) })
+          @table_record[:columns].append({column_name: schema[:Field], is_disable: (disabled_column.include?schema[:Field]), type: schema[:Type] })
         end
-        response.each do |record|
+        response.values.each do |record|
           @table_record[:records].append(record)
         end
       end

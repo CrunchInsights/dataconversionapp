@@ -1,7 +1,7 @@
 <h1>Uploaded Data Schema</h1>
 <h3>Fields included in Data Insight</h3>
 <div class="row">
-  <%= link_to "Trend Analysis", simpletrend_recordtrends_path({:table_name=> @table_name}),:buttontype=>"save",:type=>"button",:class=>"btn btn-sm btn-primary" %>
+  <%= link_to "Trend Analysis", simpletrend_recordtrends_path({:table_name=> @table_name}), :type=>"button", :class=>"btn btn-sm btn-primary", :style=>"float: right; margin-bottom: 20px; margin-right: 15px;" %>
 </div>
 <table id="enabledUploadedSchema" class="table table-striped table-bordered dataTable table-hover table-highlight table-checkable">
   <thead>
@@ -18,21 +18,28 @@
         <% @uploaded_schema.each do |schema| %>
           <% if !(@disabled_column.include? schema[:Field]) %>
               <tr>
-                <td isEditable="yes">
-                  <div isDefault="yes"><%= schema[:Field] %></div>
+                <td is_editable = "yes">
+                  <div is_default = "yes"><%= schema[:Field] %></div>
                   <div class="form-group" style="margin-bottom: 0;display: none">
                     <input type="text" class="form-control" value="<%= schema[:Field] %>">
                   </div>
                 </td>
-                <td isEditable="yes">
-                  <div isDefault="yes"><%= schema[:Type] %></div>
+                <td is_editable ="yes">
+                  <div is_default ="yes">
+                    <%if schema[:Type] == "numeric" then %>decimal
+                    <%elsif schema[:Type] == "timestamp" then %>datetime
+                    <%elsif schema[:Type] == "bool" then %>boolean
+                    <%elsif schema[:Type].include?'int' then %>integer
+                        <% else %><%= schema[:Type] %>
+                    <% end %>
+                  </div>
                   <div class="form-group" style="margin-bottom: 0; display: none">
                     <select class="form-control">
-                      <option <%= ((schema[:Type]).include? "varchar")?"selected":"" %>>string</option>
-                      <option <%= ((schema[:Type]).include? "int")?"selected":""%> >integer</option>
-                      <option <%= ((schema[:Type]).include? "decimal")?"selected":""%> >decimal</option>
-                      <option <%= ((schema[:Type]).include? "datetime")?"selected":"" %> >datetime</option>
-                      <option <%= ((schema[:Type]).include? "boolean")?"selected":"" %> >boolean</option>
+                      <option <%= ((schema[:Type]).include? "varchar")? "selected" : "" %>>string</option>
+                      <option <%= ((schema[:Type]).include? "int")? "selected" : ""%> >integer</option>
+                      <option <%= ((schema[:Type]).include? "numeric")? "selected" : ""%> >decimal</option>
+                      <option <%= ((schema[:Type]).include? "timestamp")? "selected" : "" %> >datetime</option>
+                      <option <%= ((schema[:Type]).include? "bool")? "selected": "" %> >boolean</option>
                     </select>
                   </div>
                 </td>
@@ -40,10 +47,10 @@
                 <td>
                   <%= schema[:Key] %>
                 </td>
-                <td isbuttoncolumn="yes">
+                <td is_button_column = "yes">
                   <div>
-                    <button  type="button" class="btn btn-sm btn-primary" buttontype="edit" onclick="editbuttonclick(this);">Edit</button>
-                    <%= link_to "Save", changetablecolumndetail_datauploaders_path({:columnName => schema[:Field],:tableName=> @tableName,:isColumnDisabled=>true}), data: { confirm: 'Are you sure?' },:buttontype=>"save",:style=>"display: none",:type=>"button",:class=>"btn btn-sm btn-success" %>
+                    <button type="button" class="btn btn-sm btn-primary" button_type="edit" onclick="edit_button_click(this);">Edit</button>
+                    <%= link_to "Save", changetablecolumndetail_datauploaders_path({:column_name => schema[:Field],:table_name=> @table_name,:is_column_disabled=>true}), data: { confirm: 'Are you sure?' },:button_type=>"save",:style=>"display: none",:type=>"button",:class=>"btn btn-sm btn-success" %>
                     <%= link_to "Exclude", columnexcludeinclude_datauploaders_path({:column_name => schema[:Field], :table_name=> @table_name, :is_column_disabled=>true}), method: :delete, data: { confirm: 'Are you sure?' }, :type=>"button", :class=>"btn btn-sm btn-danger" %>
                   </div>
                 </td>
@@ -71,13 +78,16 @@
                   <% if @disabled_column.include? schema[:Field] %>
                       <tr>
                         <td><%= schema[:Field] %></td>
-                        <td><%= schema[:Type]%></td>
-                        <td><%= schema[:Null] %><input  type="text" style="display: none"/></td>
                         <td>
-                          <% if schema[:Key] == "UNI" then %>
-                              UNIQUE
+                          <%if schema[:Type] == "numeric" then %>decimal
+                          <%elsif schema[:Type] == "timestamp" then %>datetime
+                          <%elsif schema[:Type] == "bool" then %>boolean
+                          <%elsif schema[:Type].include?'int' then %>integer
+                          <% else %><%= schema[:Type] %>
                           <% end %>
                         </td>
+                        <td><%= schema[:Null] %></td>
+                        <td><%= schema[:Key] %></td>
                         <td>
                           <div>
                             <%= link_to "Include", columnexcludeinclude_datauploaders_path({:column_name => schema[:Field], :table_name=> @table_name, :is_column_disabled=>false}), method: :delete, data: { confirm: 'Are you sure?' }, :type=>"button", :class=>"btn btn-sm btn-success" %>
