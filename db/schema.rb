@@ -13,16 +13,8 @@
 
 ActiveRecord::Schema.define(version: 20150113064251) do
 
-  create_table "ss34s", id: false, force: true do |t|
-    t.string  "name",    limit: 4,                          null: false
-    t.string  "manager", limit: 4,                          null: false
-    t.string  "status",  limit: 13,                         null: false
-    t.integer "term",                                       null: false
-    t.decimal "cost",               precision: 6, scale: 4, null: false
-    t.integer "bool1"
-    t.integer "bool2"
-    t.string  "bool3",   limit: 5
-  end
+  # These are extensions that must be enabled in order to support this database
+  enable_extension "plpgsql"
 
   create_table "user_file_mappings", force: true do |t|
     t.integer  "user_id"

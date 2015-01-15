@@ -18,12 +18,7 @@ gem 'jbuilder', '~> 2.0'
 gem 'bootstrap-sass', '3.2.0.0'
 gem 'devise'
 gem 'smarter_csv'
-gem 'mysql2'
-
-group :production do
-  gem 'pg'
-end
-
+gem 'pg'
 group :development do
   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
   gem 'spring' # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring

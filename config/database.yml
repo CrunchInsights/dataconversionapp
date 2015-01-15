@@ -1,16 +1,16 @@
 default: &default
-  adapter: mysql2  
+  adapter: postgresql
   pool: 5
   timeout: 5000  
   
 development:
   <<: *default
-  adapter: mysql2
+  adapter: postgresql
   encoding: utf8
   reconnect: false
   database: dataconversion_development
   pool: 5
-  username: root
+  username: postgres
   password: root
   host: localhost
 
@@ -19,22 +19,22 @@ development:
 # Do not set this db to the same as development or production.
 test:
   <<: *default
-  adapter: mysql2
+  adapter: postgresql
   encoding: utf8
   reconnect: false
   database: dataconversion_test
   pool: 5
-  username: root
+  username: postgres
   password: root
   host: localhost
 
 production:
   <<: *default
-  adapter: mysql2
+  adapter: postgresql
   encoding: utf8
   reconnect: false
   database: dataconversion_production
   pool: 5
-  username: root
+  username: postgres
   password: root
   host: localhost
