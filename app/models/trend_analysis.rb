@@ -25,12 +25,12 @@ class TrendAnalysis < ActiveRecord::Base
         result_analysis[:max] = result_analysis[:record].max
       end
       result_analysis[:count] = result_analysis[:record].size
-      if i==0
-        result_analysis[:record] =[{:value=>"$5.89", :count=>56},{:value=>"$5", :count=>24},{:value=>"$9", :count=>34}]
+      if i == 0
+        result_analysis[:record] =[{:value=>"pramod", :count=>56},{:value=>"dharmu", :count=>24},{:value=>"lokesh", :count=>34}]
       else
-        result_analysis[:record] =[{:value=>"$7", :count=>20},{:value=>"$8", :count=>30},{:value=>"$9", :count=>40}]
+        result_analysis[:record] =[{:value=>"nitin", :count=>20},{:value=>"digvijay", :count=>30},{:value=>"amirsh", :count=>40}]
       end
-
+      i=i+1
     end
     return data
   end

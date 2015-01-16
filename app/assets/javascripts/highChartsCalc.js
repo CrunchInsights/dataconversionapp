@@ -45,7 +45,7 @@ $(function () {
                 title: {
                     text: null
                 },
-                tickPositions: [0]
+                tickPositions: []
             },
             legend: {
                 enabled: false
@@ -116,14 +116,18 @@ $(function () {
             stringdata = $td.data('sparkline');
             arr = stringdata.split('; ');
             result=JSON.parse(arr[0])
+            console.log(result);
             var counts=[];
             for(j=0 ; j <result.record.length ; j++ ){
                 counts.push(result.record[j].count);
             }
+            console.log(counts);
             var values=[];
             for(j=0 ; j <result.record.length ; j++ ){
                 values.push(result.record[j].value);
             }
+
+            console.log(values);
             data = $.map(result.record, parseFloat);
             chart = {};
 
@@ -132,12 +136,18 @@ $(function () {
             }
             $td.highcharts('SparkLine', {
                 series: [{
-                    data: counts,
-                    pointStart: 1
+                    name: result.column_name,
+                    data: counts
+
+
                 }],
+                xAxis: {
+                    categories: values
+                },
                 tooltip: {
                    formatter:function(){
-                       return '<span > Value :'+this.x+' Count:'+ this.y+ '</sapn>';
+                       //debugger;
+                       return '<span >'+this.points[0].series.name+'Value :'+this.x+' Count:'+ this.y+ '</sapn>';
                    }
                 },
                 chart: chart
