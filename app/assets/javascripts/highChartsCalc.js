@@ -115,19 +115,17 @@ $(function () {
             $td = $($tds[i]);
             stringdata = $td.data('sparkline');
             arr = stringdata.split('; ');
-            result=JSON.parse(arr[0])
-            console.log(result);
+            result = JSON.parse(arr[0]);
             var counts=[];
-            for(j=0 ; j <result.record.length ; j++ ){
+            for(var j=0 ; j <result.record.length ; j++ ){
                 counts.push(result.record[j].count);
             }
-            console.log(counts);
+
             var values=[];
-            for(j=0 ; j <result.record.length ; j++ ){
-                values.push(result.record[j].value);
+            for(var k=0 ; k <result.record.length ; k++ ){
+                values.push(result.record[k].value);
             }
 
-            console.log(values);
             data = $.map(result.record, parseFloat);
             chart = {};
 
@@ -138,16 +136,13 @@ $(function () {
                 series: [{
                     name: result.column_name,
                     data: counts
-
-
                 }],
                 xAxis: {
                     categories: values
                 },
                 tooltip: {
                    formatter:function(){
-                       //debugger;
-                       return '<span >'+this.points[0].series.name+'Value :'+this.x+' Count:'+ this.y+ '</sapn>';
+                       return '<span><b>' + (this.points[0].series.name).toUpperCase() + '-</b> Value: ' + this.x + ', Count: '+ this.y+ '</sapn>';
                    }
                 },
                 chart: chart

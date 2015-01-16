@@ -12,7 +12,7 @@ class TrendAnalysis < ActiveRecord::Base
         end
       end
     end
-    i=0
+    i = 0
     data.each do |result_analysis|
       rec_hash = UserTableColumnInformation.where("table_name =? and column_name =?", table_name, result_analysis[:column_name]).first
       if rec_hash then
@@ -30,7 +30,7 @@ class TrendAnalysis < ActiveRecord::Base
       else
         result_analysis[:record] =[{:value=>"nitin", :count=>20},{:value=>"digvijay", :count=>30},{:value=>"amirsh", :count=>40}]
       end
-      i=i+1
+      i = i + 1
     end
     return data
   end
