@@ -13,9 +13,9 @@
 //= require jquery
 //= require jquery_ujs
 //= require turbolinks
-
 //= require bootstrap
 //= require alertify.min
+//= require highcharts
 //= require jquery.dataTables.min
 //= require migrate
 

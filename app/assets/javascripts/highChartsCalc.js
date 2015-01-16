@@ -102,7 +102,6 @@ $(function () {
     // can take some seconds, so we split the input into chunks and apply them in timeouts
     // in order avoid locking up the browser process and allow interaction.
     function doChunk() {
-        //debugger;
         var time = +new Date(),
             i,
             len = $tds.length,
