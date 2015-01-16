@@ -116,7 +116,14 @@ $(function () {
             stringdata = $td.data('sparkline');
             arr = stringdata.split('; ');
             result=JSON.parse(arr[0])
-            console.log(result)
+            var counts=[];
+            for(j=0 ; j <result.record.length ; j++ ){
+                counts.push(result.record[j].count);
+            }
+            var values=[];
+            for(j=0 ; j <result.record.length ; j++ ){
+                values.push(result.record[j].value);
+            }
             data = $.map(result.record, parseFloat);
             chart = {};
 
@@ -125,12 +132,13 @@ $(function () {
             }
             $td.highcharts('SparkLine', {
                 series: [{
-                    data: data,
+                    data: counts,
                     pointStart: 1
                 }],
                 tooltip: {
-                    headerFormat: '<span style="font-size: 10px">' + result.columnname + ', {point.x}:</span><br/>',
-                    pointFormat: '<b>'+ result.moneyFormat +' {point.y}</b>'
+                   formatter:function(){
+                       return '<span > Value :'+this.x+' Count:'+ this.y+ '</sapn>';
+                   }
                 },
                 chart: chart
             });

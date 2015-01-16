@@ -12,7 +12,7 @@ class TrendAnalysis < ActiveRecord::Base
         end
       end
     end
-
+    i=0
     data.each do |result_analysis|
       rec_hash = UserTableColumnInformation.where("table_name =? and column_name =?", table_name, result_analysis[:column_name]).first
       if rec_hash then
@@ -25,6 +25,12 @@ class TrendAnalysis < ActiveRecord::Base
         result_analysis[:max] = result_analysis[:record].max
       end
       result_analysis[:count] = result_analysis[:record].size
+      if i==0
+        result_analysis[:record] =[{:value=>"$5.89", :count=>56},{:value=>"$5", :count=>24},{:value=>"$9", :count=>34}]
+      else
+        result_analysis[:record] =[{:value=>"$7", :count=>20},{:value=>"$8", :count=>30},{:value=>"$9", :count=>40}]
+      end
+
     end
     return data
   end
