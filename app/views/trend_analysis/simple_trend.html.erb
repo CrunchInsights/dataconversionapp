@@ -51,7 +51,11 @@
                   <% end %>
               <% end %>
             </td>
-            <td data-sparkline="<%= (record_analysis.to_json).to_s %> ; column"></td>
+            <% if record_analysis[:is_unique] == "UNIQUE" then %>
+                <td> All Values are Unique</td>
+            <% else %>
+                <td data-sparkline="<%= (record_analysis.to_json).to_s %> ; column"></td>
+            <% end %>
           </tr>
       <% end %>
   <% end %>

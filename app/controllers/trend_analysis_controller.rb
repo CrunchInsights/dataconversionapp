@@ -10,10 +10,10 @@ class TrendAnalysisController < ApplicationController
       uploaded_schema.each do |schema|
         if disabled_column.size > 0 then
           if !disabled_column.include?schema[:Field] then
-            @table_record.append({column_name: schema[:Field], type: schema[:Type], min: 0, max: 0, count: 0, money_format: '', record:[]})
+            @table_record.append({column_name: schema[:Field], type: schema[:Type], is_unique: schema[:Key], min: 0, max: 0, count: 0, money_format: '', record:[]})
           end
         else
-          @table_record.append({column_name: schema[:Field], type: schema[:Type], min: 0, max: 0, count: 0, money_format: '', record:[]})
+          @table_record.append({column_name: schema[:Field], type: schema[:Type], is_unique: schema[:Key], min: 0, max: 0, count: 0, money_format: '', record:[]})
         end
       end
 

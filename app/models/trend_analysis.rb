@@ -30,8 +30,6 @@ class TrendAnalysis < ActiveRecord::Base
         end
       end
     end
-    puts "***************"
-    puts data
     data.each do |result_analysis|
       rec_hash = UserTableColumnInformation.where("table_name =? and column_name =?", table_name, result_analysis[:column_name]).first
       if rec_hash then
@@ -44,12 +42,20 @@ class TrendAnalysis < ActiveRecord::Base
         result_analysis[:max] = result_analysis[:record].max
       end
       result_analysis[:count] = result_analysis[:record].size
-      org_records = result_analysis[:record]
-      unique_records = result_analysis[:record].uniq
-      result_analysis[:record] = []
-      unique_records.each do |unique_record|
-        count_rec = org_records.count(unique_record)
-        result_analysis[:record].append({:value => unique_record, :count => count_rec});
+      if result_analysis[:record].size == result_analysis[:record].uniq.size then
+        result_analysis[:is_unique] = "UNIQUE"
+      end
+
+      if result_analysis[:is_unique] == "UNIQUE" then
+        result_analysis[:record] = []
+      else
+        org_records = result_analysis[:record]
+        unique_records = result_analysis[:record].uniq
+        result_analysis[:record] = []
+        unique_records.each do |unique_record|
+          count_rec = org_records.count(unique_record)
+          result_analysis[:record].append({:value => unique_record, :count => count_rec})
+        end
       end
     end
     return data
