@@ -12,7 +12,6 @@ class TrendAnalysis < ActiveRecord::Base
         end
       end
     end
-    i = 0
     data.each do |result_analysis|
       rec_hash = UserTableColumnInformation.where("table_name =? and column_name =?", table_name, result_analysis[:column_name]).first
       if rec_hash then
@@ -20,17 +19,25 @@ class TrendAnalysis < ActiveRecord::Base
       end
       #removing blank, null and nil values from array
       result_analysis[:record] = result_analysis[:record].reject { |c| c.blank? }
-      if ((!(result_analysis[:type].include?'varchar')) && (!(result_analysis[:type].include?'boolean'))) then
+      if ((!(result_analysis[:type].include?'varchar')) && (!(result_analysis[:type].include?'bool'))) then
         result_analysis[:min] = result_analysis[:record].min
         result_analysis[:max] = result_analysis[:record].max
       end
       result_analysis[:count] = result_analysis[:record].size
-      if i == 0
-        result_analysis[:record] =[{:value=>"pramod", :count=>56},{:value=>"dharmu", :count=>24},{:value=>"lokesh", :count=>34}]
-      else
-        result_analysis[:record] =[{:value=>"nitin", :count=>20},{:value=>"digvijay", :count=>30},{:value=>"amirsh", :count=>40}]
+      org_records = result_analysis[:record]
+      unique_records = result_analysis[:record].uniq
+      result_analysis[:record] = []
+      unique_records.each do |unique_record|
+        count_rec = org_records.count(unique_record)
+        if ((result_analysis[:type].include?'bool')) then
+          if unique_record == 't' then
+            unique_record = "True"
+          else
+            unique_record = "False"
+          end
+        end
+        result_analysis[:record].append({:value => unique_record, :count => count_rec});
       end
-      i = i + 1
     end
     return data
   end

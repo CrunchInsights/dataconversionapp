@@ -16,7 +16,14 @@
       <% @table_record.each do |record_analysis| %>
           <tr>
             <td><%= record_analysis[:column_name] %></td>
-            <td><%= record_analysis[:type] %></td>
+            <td>
+              <%if record_analysis[:type] == "numeric" then %>decimal
+              <%elsif record_analysis[:type] == "timestamp" then %>datetime
+              <%elsif record_analysis[:type] == "bool" then %>boolean
+              <%elsif record_analysis[:type].include?'int' then %>integer
+              <% else %><%= record_analysis[:type] %>
+              <% end %>
+            </td>
             <td><%= record_analysis[:count] %></td>
             <td>
               <% if record_analysis[:min] == 0 then %>
