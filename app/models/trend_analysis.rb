@@ -7,11 +7,31 @@ class TrendAnalysis < ActiveRecord::Base
       records.values.each do |result|
         i=0
         result.each do |per_field_value|
-          data[i][:record].append(per_field_value)
+          if per_field_value == nil then
+            data[i][:record].append(per_field_value)
+          else
+            if data[i][:type].include?'int' then
+              data[i][:record].append(per_field_value.strip.to_i)
+            elsif data[i][:type] == "numeric" then
+              data[i][:record].append(per_field_value.strip.to_f)
+            elsif data[i][:type].include?'bool' then
+              if per_field_value == 't' then
+                per_field_value = "True"
+              else
+                per_field_value = "False"
+              end
+              data[i][:record].append(per_field_value.strip)
+            else
+              data[i][:record].append(per_field_value.strip)
+
+            end
+          end
           i = i + 1;
         end
       end
     end
+    puts "***************"
+    puts data
     data.each do |result_analysis|
       rec_hash = UserTableColumnInformation.where("table_name =? and column_name =?", table_name, result_analysis[:column_name]).first
       if rec_hash then
@@ -29,13 +49,6 @@ class TrendAnalysis < ActiveRecord::Base
       result_analysis[:record] = []
       unique_records.each do |unique_record|
         count_rec = org_records.count(unique_record)
-        if ((result_analysis[:type].include?'bool')) then
-          if unique_record == 't' then
-            unique_record = "True"
-          else
-            unique_record = "False"
-          end
-        end
         result_analysis[:record].append({:value => unique_record, :count => count_rec});
       end
     end
