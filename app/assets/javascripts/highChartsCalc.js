@@ -134,7 +134,7 @@ $(function () {
             }
             $td.highcharts('SparkLine', {
                 series: [{
-                    name: result.column_name,
+                    name: result.column_name+'/'+result.money_format,
                     data: counts
                 }],
                 xAxis: {
@@ -142,7 +142,8 @@ $(function () {
                 },
                 tooltip: {
                    formatter:function(){
-                       return '<span><b>' + (this.points[0].series.name).toUpperCase() + '-</b> Value: ' + this.x + ', Count: '+ this.y+ '</sapn>';
+                       var split_arr=((this.points[0].series.name).toUpperCase()).split('/');
+                       return '<span><b>' + split_arr[0]+ '-</b> <br> Value: ' +split_arr[1]+ this.x + ', Count: '+ this.y+ '</sapn>';
                    }
                 },
                 chart: chart
