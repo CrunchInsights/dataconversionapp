@@ -1,6 +1,7 @@
 //use for file upload action , only allow csv format
 $('#file').change(function(){
-	var fileType = 'comma-separated-values,vnd.ms-excel';
+    //debugger;
+	var fileType = 'comma-separated-values,vnd.ms-excel,csv';
 	var isCorrectType = false;
     var chosen = this.files[0];
     
@@ -20,6 +21,7 @@ $('#file').change(function(){
         }
     }
 });
+
 $(function(){
     $('.dataTable').DataTable();//use for simple table into datatable
 });
