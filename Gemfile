@@ -19,7 +19,7 @@ gem 'bootstrap-sass', '3.2.0.0'
 gem 'devise'
 gem 'smarter_csv'
 gem 'pg'
-gem 'foreman'
+gem 'foreman'     #To deploy the app on heroku
 group :development do
   gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
   gem 'spring' # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
@@ -31,7 +31,7 @@ group :development do
 end
 
 group :production do
-  gem 'rails_12factor'
+  gem 'rails_12factor'             #Assets Pipelining required in heroku
 end
 
 group :doc do
