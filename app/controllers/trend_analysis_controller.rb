@@ -1,5 +1,8 @@
 class TrendAnalysisController < ApplicationController
+  add_breadcrumb "Home", :root_path, :options => { :title => "Home" }
   def simple_trend
+    add_breadcrumb_for_simple_trend()
+    add_breadcrumb "Simple Trend", simpletrend_recordtrends_path, :title => "Simple Trend"
     @table_record=[]
     table_name = params[:table_name]
     #get table schema

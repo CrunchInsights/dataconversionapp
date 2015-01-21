@@ -21,10 +21,27 @@ thead th {
     border-top: 2px solid gray;
     border-bottom: 2px solid gray;
 }
+
 .highcharts-tooltip>span {
     background: lightpink;
     border: 1px solid silver;
     border-radius: 3px;
     box-shadow: 1px 1px 2px #888;
     padding: 8px;
+}
+
+.modal-dialog{
+    margin: auto  !important;
+    left: 45%  !important;
+    top: 45%  !important;
+    width: auto !important;
+}
+
+.modal-body {
+    color: #FF1919 !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    left: 35% !important;
+    top: 45% !important;
+    width: auto !important;
 }

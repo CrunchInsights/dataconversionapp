@@ -34,3 +34,7 @@ function edit_button_click(view){
     (tr.find('td[is_button_column="yes"]')).find('button[button_type = "edit"]').hide();
     (tr.find('td[is_button_column="yes"]')).find('a[button_type = "save"]').show();
 }
+
+function show_loading_window() {
+    $("#div_loading_window").modal();
+}

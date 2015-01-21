@@ -2,6 +2,12 @@
 
 <%= form_tag import_datauploaders_path, multipart: true, id: 'uploadForm' do %>
     <div class="row"><div class="col-sm-3"><%= file_field_tag :file %></div>
-      <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary" %></div></div>
+      <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary", :onclick => "show_loading_window();" %></div></div>
 <% end %>
+<div id="div_loading_window" class="modal fade in" style="width: 100% !Important; overflow-y: hidden; height: 100% !Important;">
+  <%= image_tag("ajax-loader.gif", :class => "modal-dialog") %>
+  <div class="modal-body">
+    <p>Please wait while upload is in progress!!!!!</p>
+  </div>
+</div>
 <%= javascript_include_tag('datauploaders.js') %>

@@ -1,8 +1,8 @@
 class DataUploadersController < ApplicationController
   respond_to :html
-
+  add_breadcrumb "Home", :root_path, :options => { :title => "Home" }
   def file_upload
-
+    add_breadcrumb "File Upload", fileupload_datauploaders_path, :title => "File Upload"
   end
 
   def import
@@ -26,7 +26,6 @@ class DataUploadersController < ApplicationController
         column_name = ''
         @columns_detail = []
         columns = csv_data.shift
-
         if columns.size != columns.uniq.size  then
           redirect_to fileupload_datauploaders_path, :flash => { :error => 'In uploaded file columns are repeated' }
         else
@@ -292,10 +291,12 @@ class DataUploadersController < ApplicationController
 
   # show upload csv generated table schema
   def show_uploaded_schema
+    add_breadcrumb "Uploaded File(s)", uploadedfile_datauploaders_path, :title => "Uploaded File(s)"
     @table_name = params[:table_name]
     @uploaded_schema = DataUploader.get_uploaded_schema(@table_name)
     if @uploaded_schema.size>0
       @disabled_column = get_user_table_column_info(@table_name)
+      add_breadcrumb "Uploaded File Schema", showuploadedschema_datauploaders_path, :title => "Uploaded File Schema"
     else
       redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema not exists" }
     end
@@ -303,6 +304,7 @@ class DataUploadersController < ApplicationController
 
   # find uploaded files details
   def uploaded_file
+    add_breadcrumb "Uploaded File(s)", uploadedfile_datauploaders_path, :title => "Uploaded File(s)"
     currentUser = current_user.id
     @uploadedFiles = UserFileMapping.where(:user_id =>currentUser )
     respond_with(@uploadedFiles)
@@ -310,6 +312,7 @@ class DataUploadersController < ApplicationController
 
   # find uploaded file records
   def upload_file_record
+    add_breadcrumb "Uploaded File(s)", uploadedfile_datauploaders_path, :title => "Uploaded File(s)"
     @table_record={columns:[], records:[] }
     @uploaded_records=[]
     table_name = params[:table_name]
@@ -325,6 +328,7 @@ class DataUploadersController < ApplicationController
           @table_record[:records].append(record)
         end
       end
+      add_breadcrumb "Uploaded File Record(s)", uploadfilerecord_datauploaders_path, :title => "Uploaded File Record(s)"
       respond_with(@uploaded_records,@uploadedSchema,@table_record)
     else
       redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema does not exists" }

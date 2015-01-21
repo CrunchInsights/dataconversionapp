@@ -26,8 +26,8 @@
             </td>
             <td>
               <div>
-                <%= link_to "Schema",showuploadedschema_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}),:type=>"button",:class=>"btn btn-sm btn-warning" %>
-                <%= link_to "Records",uploadfilerecord_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}),:type=>"button",:class=>"btn btn-sm btn-primary" %>
+                <%= link_to "Schema", showuploadedschema_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}), :type=>"button", :class=>"btn btn-sm btn-warning", :onclick => "show_loading_window();" %>
+                <%= link_to "Records", uploadfilerecord_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}), :type=>"button", :class=>"btn btn-sm btn-primary", :onclick => "show_loading_window();" %>
               </div>
             </td>
           </tr>
@@ -35,5 +35,10 @@
   <% end %>
   </tbody>
 </table>
-
+<div id="div_loading_window" class="modal fade in" style="width: 100% !Important; overflow-y: hidden; height: 100% !Important;">
+  <%= image_tag("ajax-loader.gif", :class => "modal-dialog") %>
+  <div class="modal-body">
+    <p>Please wait while we retrieve your result!!!!!</p>
+  </div>
+</div>
 <%= javascript_include_tag('datauploaders.js') %>
