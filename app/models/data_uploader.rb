@@ -89,7 +89,7 @@ class DataUploader < ActiveRecord::Base
       table_col_str = table_columns.map{|col| "#{col}"}.join(', ')
       options = {
           :row_sep => :auto,
-          :chunk_size => 2,
+          :chunk_size => 100,
           :remove_empty_values => false,
           :remove_zero_values => false,
           :remove_values_matching => nil
