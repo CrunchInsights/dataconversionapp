@@ -58,6 +58,7 @@
 
     <div class="container">
       <div style="height:52px; width:100%; margin-top: 20px;"></div>
+      <div id="custom_message" style="width:100%;"></div>
       <% if  flash[:notice] %>
           <div class='alert alert-success'>
             <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -74,9 +75,11 @@
             <%= flash[:alert] %>
           </div>
       <% end %>
-      <ol class="breadcrumb">
-        <%= render_breadcrumbs :tag => :li, :separator => "" %>
-      </ol>
+      <% if current_user %>
+          <ol class="breadcrumb">
+            <%= render_breadcrumbs :tag => :li, :separator => "" %>
+          </ol>
+      <% end %>
       <%= yield %>
     </div>
 </body>

@@ -3,7 +3,7 @@
   <thead>
       <tr>
         <th style="width: 250px">Upload File</th>
-        <th style="width: 250px">Created Table</th>
+        <th style="width: 250px">Data Source</th>
         <th style="width: 250px">Upload Date</th>
         <th style="width: 90px">Action</th>
       </tr>
@@ -26,8 +26,18 @@
             </td>
             <td>
               <div>
-                <%= link_to "Schema", showuploadedschema_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}), :type=>"button", :class=>"btn btn-sm btn-warning", :onclick => "show_loading_window();" %>
-                <%= link_to "Records", uploadfilerecord_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}), :type=>"button", :class=>"btn btn-sm btn-primary", :onclick => "show_loading_window();" %>
+                <% if record.is_table_created then %>
+                    <%= link_to "Schema", showuploadedschema_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}), :type=>"button", :class=>"btn btn-sm btn-warning", :onclick => "show_loading_window();" %>
+                    <% if record.is_record_uploaded then %>
+                        <%= link_to "Records", uploadfilerecord_datauploaders_path({:table_name => (record.table_name).downcase.pluralize}), :type=>"button", :class=>"btn btn-sm btn-primary", :onclick => "show_loading_window();" %>
+                    <% else %>
+                        <button type="button" class="btn btn-sm btn-primary" onclick="show_message('Data upload is still in progress. Please refresh the page for latest status', 'info');">Records</button>
+                    <% end %>
+                <% else %>
+                    <% some_local = '<a rel="nofollow" href="/datauploaders/deleteuserfilemappingrecord?table_name="'+record.table_name+'"data-method="delete">here</a>' %>
+
+                    <button type="button" class="btn btn-sm btn-warning" onclick="show_message('There was an error in your previous upload. Please upload your file again and if you want to delete this entry from history please click &nbsp &nbsp'+'<%=some_local%>', 'error');">Schema</button>
+                <% end %>
               </div>
             </td>
           </tr>

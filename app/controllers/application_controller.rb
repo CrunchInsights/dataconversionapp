@@ -16,8 +16,7 @@ class ApplicationController < ActionController::Base
     return disabled_column
   end
 
-  def add_breadcrumb_for_simple_trend()
-    add_breadcrumb "Uploaded File(s)", uploadedfile_datauploaders_path, :title => "Uploaded File(s)"
-    add_breadcrumb "Uploaded File Schema", showuploadedschema_datauploaders_path, :title => "Uploaded File Schema"
+  def initalize_breadcrumb(breadcrumb_name, breadcrumb_path)
+    add_breadcrumb breadcrumb_name, breadcrumb_path, :title => breadcrumb_name
   end
 end

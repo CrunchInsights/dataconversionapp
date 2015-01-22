@@ -36,5 +36,34 @@ function edit_button_click(view){
 }
 
 function show_loading_window() {
-    $("#div_loading_window").modal();
+    $("#div_loading_window").modal('show');
 }
+
+function show_message(message, message_type){
+    if(message_type=="notice"){
+        $('div.container div#custom_message').append("<div class='alert alert-success'>" +
+            "<button type='button' class='close' data-dismiss='alert'>" +
+            "&times;</button>" +message+"</div>");
+    }else{
+        if(message_type =="error"){
+            $('div.container div#custom_message').append("<div class='alert alert-danger'>" +
+                "<button type='button' class='close' data-dismiss='alert'>" +
+                "&times;</button>" +message+"</div>");
+        }else{
+            $('div.container div#custom_message').append("<div class='alert alert-info'>" +
+                "<button type='button' class='close' data-dismiss='alert'>" +
+                "&times;</button>" +message+"</div>");
+        }
+    }
+}
+
+$(document).ready(function () {
+    $("#div_loading_window").modal('hide');
+    $(window).on('popstate', function() {
+        if(history.length) {
+            $("#div_loading_window").modal('hide');
+            window.location.reload();
+        }
+    });
+});
+
