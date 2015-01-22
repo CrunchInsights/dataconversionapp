@@ -89,12 +89,13 @@ class DataUploader < ActiveRecord::Base
       table_col_str = table_columns.map{|col| "#{col}"}.join(', ')
       options = {
           :row_sep => :auto,
-          :chunk_size => 100,
+          :chunk_size => 50,
           :remove_empty_values => false,
           :remove_zero_values => false,
           :remove_values_matching => nil
       }
       SmarterCSV.process(file_path, options) do |chunk|
+        chunk_insert_string = ''
         chunk.each do |data_hash|
           data_hash = data_hash.to_a
           data_hash = data_hash.transpose
@@ -149,9 +150,16 @@ class DataUploader < ActiveRecord::Base
             i = i+1
           end
           inserted_row_string = inserted_row_string[0...-2]
-          my_sql="INSERT INTO #{table_name} (#{table_col_str}) Values (#{inserted_row_string})"
-          result_set = ActiveRecord::Base.connection.execute(my_sql)
+          chunk_insert_string = chunk_insert_string + "(#{inserted_row_string}), "
         end
+        chunk_insert_string = chunk_insert_string[0...-2]
+        my_sql="INSERT INTO #{table_name} (#{table_col_str}) Values #{chunk_insert_string}"
+        result_set = ActiveRecord::Base.connection.execute(my_sql)
+      end
+      user_table_mapping = UserFileMapping.where("table_name =?", table_name).first
+      if user_table_mapping then
+        user_table_mapping.is_record_uploaded = true
+        user_table_mapping.save
       end
     end
   end
@@ -160,6 +168,28 @@ class DataUploader < ActiveRecord::Base
     result = []
     begin
       my_sql="SELECT * FROM #{table_name}"
+      result = ActiveRecord::Base.connection.execute(my_sql)
+      return result
+    rescue Exception => err
+      return result
+    end
+  end
+
+  def self.check_table_exist(table_name)
+    result = []
+    begin
+      my_sql = "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_name = '#{table_name}') as is_exist"
+      result = ActiveRecord::Base.connection.execute(my_sql)
+      return result
+    rescue Exception => err
+      return result
+    end
+  end
+
+  def self.drop_table_if_exist(table_name)
+    result = []
+    begin
+      my_sql = "DROP table #{table_name}"
       result = ActiveRecord::Base.connection.execute(my_sql)
       return result
     rescue Exception => err

@@ -2,7 +2,7 @@ class DataUploadersController < ApplicationController
   respond_to :html
   add_breadcrumb "Home", :root_path, :options => { :title => "Home" }
   def file_upload
-    add_breadcrumb "File Upload", fileupload_datauploaders_path, :title => "File Upload"
+    initalize_breadcrumb("File Upload", fileupload_datauploaders_path)
   end
 
   def import
@@ -275,9 +275,16 @@ class DataUploadersController < ApplicationController
                       modified_on: Time.now)
                 end
               end
+              user_table_mapping = UserFileMapping.where("table_name =?", table_name.downcase.pluralize).first
+              if user_table_mapping then
+                user_table_mapping.is_table_created = true
+                user_table_mapping.save
+              end
             rescue
             end
-            DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail)
+            Thread.new do
+              DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail)
+            end
             redirect_to showuploadedschema_datauploaders_path({:table_name => table_name.downcase.pluralize}), notice: "Data Uploaded Successfully"
           else
             redirect_to fileupload_datauploaders_path, :flash => { :error => "Error: #{is_table_created}" }
@@ -291,12 +298,12 @@ class DataUploadersController < ApplicationController
 
   # show upload csv generated table schema
   def show_uploaded_schema
-    add_breadcrumb "Uploaded File(s)", uploadedfile_datauploaders_path, :title => "Uploaded File(s)"
+    initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)
     @table_name = params[:table_name]
     @uploaded_schema = DataUploader.get_uploaded_schema(@table_name)
     if @uploaded_schema.size>0
       @disabled_column = get_user_table_column_info(@table_name)
-      add_breadcrumb "Uploaded File Schema", showuploadedschema_datauploaders_path, :title => "Uploaded File Schema"
+      initalize_breadcrumb("Uploaded File Schema", showuploadedschema_datauploaders_path({:table_name => @table_name}))
     else
       redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema not exists" }
     end
@@ -304,7 +311,7 @@ class DataUploadersController < ApplicationController
 
   # find uploaded files details
   def uploaded_file
-    add_breadcrumb "Uploaded File(s)", uploadedfile_datauploaders_path, :title => "Uploaded File(s)"
+    initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)
     currentUser = current_user.id
     @uploadedFiles = UserFileMapping.where(:user_id =>currentUser )
     respond_with(@uploadedFiles)
@@ -312,7 +319,7 @@ class DataUploadersController < ApplicationController
 
   # find uploaded file records
   def upload_file_record
-    add_breadcrumb "Uploaded File(s)", uploadedfile_datauploaders_path, :title => "Uploaded File(s)"
+    initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)
     @table_record={columns:[], records:[] }
     @uploaded_records=[]
     table_name = params[:table_name]
@@ -328,7 +335,7 @@ class DataUploadersController < ApplicationController
           @table_record[:records].append(record)
         end
       end
-      add_breadcrumb "Uploaded File Record(s)", uploadfilerecord_datauploaders_path, :title => "Uploaded File Record(s)"
+      initalize_breadcrumb("Uploaded File Record(s)", uploadfilerecord_datauploaders_path)
       respond_with(@uploaded_records,@uploadedSchema,@table_record)
     else
       redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema does not exists" }
@@ -356,5 +363,14 @@ class DataUploadersController < ApplicationController
       format.html { redirect_to showuploadedschema_datauploaders_path({:table_name => table_name}), notice: (errors.size ==0 ? "Column detail update Successfully":errors)  }
       format.json { head :no_content }
     end
+  end
+
+  def delete_user_file_mapping_record
+    table_name = params[:table_name]
+    response = DataUploader.check_table_exist(table_name)
+    if response.to_a.size > 0 then
+      DataUploader.drop_table_if_exist(table_name)
+    end
+    delete_user_file_mapping_record = UserFileMapping.find_by(:table_name => table_name).destroy
   end
 end
