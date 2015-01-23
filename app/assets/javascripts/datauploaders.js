@@ -38,21 +38,28 @@ function edit_button_click(view){
 function show_loading_window() {
     $("#div_loading_window").modal('show');
 }
-
-function show_message(message, message_type){
+function show_message(message, message_type, obj){
+    var hyper_link_exist =$(obj).parent().find('a').length;
+    var html='';
+    if(hyper_link_exist > 0){
+        html = $(obj).parent().find('a').first().clone();
+    }
     if(message_type=="notice"){
-        $('div.container div#custom_message').append("<div class='alert alert-success'>" +
+        var div="<div class='alert alert-success'>" +
             "<button type='button' class='close' data-dismiss='alert'>" +
-            "&times;</button>" +message+"</div>");
+            "&times;</button>" +message+"</div>";
+        $('div.container div#custom_message').append( $(div).append($(html).show()));
     }else{
         if(message_type =="error"){
-            $('div.container div#custom_message').append("<div class='alert alert-danger'>" +
+            var div="<div class='alert alert-danger'>" +
                 "<button type='button' class='close' data-dismiss='alert'>" +
-                "&times;</button>" +message+"</div>");
+                "&times;</button>" +message+"</div>";
+            $('div.container div#custom_message').append( $(div).append($(html).show()));
         }else{
-            $('div.container div#custom_message').append("<div class='alert alert-info'>" +
+            var div="<div class='alert alert-info'>" +
                 "<button type='button' class='close' data-dismiss='alert'>" +
-                "&times;</button>" +message+"</div>");
+                "&times;</button>" +message+"</div>";
+            $('div.container div#custom_message').append( $(div).append($(html).show()));
         }
     }
 }

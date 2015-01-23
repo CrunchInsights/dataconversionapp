@@ -372,5 +372,6 @@ class DataUploadersController < ApplicationController
       DataUploader.drop_table_if_exist(table_name)
     end
     delete_user_file_mapping_record = UserFileMapping.find_by(:table_name => table_name).destroy
+    redirect_to uploadedfile_datauploaders_path, :flash => { :notice => "Data source deleted successfully." }
   end
 end
