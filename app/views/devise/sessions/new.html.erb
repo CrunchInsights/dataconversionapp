@@ -18,12 +18,11 @@
 						<% if devise_mapping.rememberable? -%>
 						   <div class="checkbox">  
 						   	<label> 		
-								<%= f.check_box :remember_me %> Remember Me	
-								</label>					       
+								<%= f.check_box :remember_me %> Remember Me
+                            </label>
 						    </div>
 						<% end -%>  	
-						 <%= f.submit "Log in", :class => "btn btn-lg btn-success btn-block" %>		    	
-			    		
+						 <%= f.submit "Log in", :class => "btn btn-lg btn-success btn-block" %>
 			    		<%= render "devise/shared/links" %>
 			    	</fieldset>
 			      	<%  end %>

@@ -8,8 +8,7 @@ class DataUploadersController < ApplicationController
   def import
     if params[:file] then
       uploaded_file_name = params[:file].original_filename.split('.').first.tr(" ","").gsub(/[^0-9A-Za-z]/, '').downcase
-      count_table_name = UserFileMapping.where('Lower(table_name) LIKE ? OR Lower(table_name) LIKE ?', "#{uploaded_file_name}%", "#{(uploaded_file_name.pluralize)}%").count
-      table_name = count_table_name > 0? uploaded_file_name + "#{count_table_name}" : uploaded_file_name
+      table_name=uploaded_file_name+SecureRandom.hex(7)
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name.downcase.pluralize)
       if add_file_detail.errors.any?
         errors = ""
@@ -282,9 +281,12 @@ class DataUploadersController < ApplicationController
               end
             rescue
             end
+            puts "************************* Uploaded record thred start here...****************************"
             Thread.new do
+              puts "************************* thred  here...****************************"
               DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail)
             end
+            puts "************************* Uploaded record thred end here...****************************"
             redirect_to showuploadedschema_datauploaders_path({:table_name => table_name.downcase.pluralize}), notice: "Data Uploaded Successfully"
           else
             redirect_to fileupload_datauploaders_path, :flash => { :error => "Error: #{is_table_created}" }

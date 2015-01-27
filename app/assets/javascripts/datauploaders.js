@@ -23,7 +23,7 @@ $('#file').change(function(){
 });
 
 $(function(){
-    $('.dataTable').DataTable();//use for simple table into datatable
+    $('.dataTable').dataTable();//use for simple table into datatable
 });
 
 //Edit button click on table schema screen
@@ -38,39 +38,39 @@ function edit_button_click(view){
 function show_loading_window() {
     $("#div_loading_window").modal('show');
 }
-function show_message(message, message_type, obj){
+function show_message(message, message_type, obj,is_use_clone){
     var hyper_link_exist =$(obj).parent().find('a').length;
     var html='';
-    if(hyper_link_exist > 0){
-        html = $(obj).parent().find('a').first().clone();
+    if(is_use_clone==true && hyper_link_exist > 0){
+        html = $(obj).parent().find('a').first().clone().show();
     }
     if(message_type=="notice"){
         var div="<div class='alert alert-success'>" +
             "<button type='button' class='close' data-dismiss='alert'>" +
             "&times;</button>" +message+"</div>";
-        $('div.container div#custom_message').append( $(div).append($(html).show()));
+        $('div.container div#custom_message').append( $(div).append($(html)));
     }else{
         if(message_type =="error"){
             var div="<div class='alert alert-danger'>" +
                 "<button type='button' class='close' data-dismiss='alert'>" +
                 "&times;</button>" +message+"</div>";
-            $('div.container div#custom_message').append( $(div).append($(html).show()));
+            $('div.container div#custom_message').append( $(div).append($(html)));
         }else{
             var div="<div class='alert alert-info'>" +
                 "<button type='button' class='close' data-dismiss='alert'>" +
                 "&times;</button>" +message+"</div>";
-            $('div.container div#custom_message').append( $(div).append($(html).show()));
+            $('div.container div#custom_message').append( $(div).append($(html)));
         }
     }
 }
 
-$(document).ready(function () {
-    $("#div_loading_window").modal('hide');
-    $(window).on('popstate', function() {
-        if(history.length) {
-            $("#div_loading_window").modal('hide');
-            window.location.reload();
-        }
-    });
+$(window).on('popstate', function() {
+    if(history.length) {
+        $("#div_loading_window").modal('hide');
+        window.location.reload();
+    }
 });
+/*$(document).ready(function () {
+
+})*/;
 

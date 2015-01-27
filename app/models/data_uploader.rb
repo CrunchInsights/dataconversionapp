@@ -81,6 +81,8 @@ class DataUploader < ActiveRecord::Base
   end
 
   def self.insert_csv_data(file_path, table_name, column_structure_object)
+    puts "************************* Uploaded enter here...****************************"
+    #byebug
     if column_structure_object.size > 0
       table_columns = []
       column_structure_object.each do |column_name|
@@ -94,7 +96,9 @@ class DataUploader < ActiveRecord::Base
           :remove_zero_values => false,
           :remove_values_matching => nil
       }
+
       SmarterCSV.process(file_path, options) do |chunk|
+        puts "===========================Enter Smarter CSV================================"
         chunk_insert_string = ''
         chunk.each do |data_hash|
           data_hash = data_hash.to_a
@@ -103,59 +107,69 @@ class DataUploader < ActiveRecord::Base
           inserted_row_string = ''
           i = 0
           data_hash[0].each do |inserted_row_value|
-            if inserted_row_value == nil then
-              inserted_row_string = inserted_row_string + 'NULL, '
-            elsif ((inserted_row_value.to_s.strip.downcase == 'null') || (inserted_row_value.to_s.strip.downcase) == "nil" || (inserted_row_value.to_s.strip == "")) then
-              inserted_row_string = inserted_row_string + 'NULL, '
-            else
-              if column_structure_object[i][:data_type] == "datetime" then
-                if column_structure_object[i][:date_format] != "" then
-                  inserted_row_string = inserted_row_string + "'" + DateTime.strptime(inserted_row_value.strip, column_structure_object[i][:date_format]).strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
-                else
-                  inserted_row_string = inserted_row_string + "'" + DateTime.parse(inserted_row_value.strip).strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
-                end
-              elsif column_structure_object[i][:data_type] == "integer" then
-                inserted_row_string = inserted_row_string + inserted_row_value.to_s.to_s + ", "
-              elsif column_structure_object[i][:data_type] == "decimal" then
-                if column_structure_object[i][:is_money_format] == true
-                  inserted_row_value = inserted_row_value.to_s.tr(column_structure_object[i][:money_symbol],'').strip
-                  inserted_row_string = inserted_row_string + "'" + inserted_row_value.gsub(/,/,'').to_s + "', "
-                else
-                  inserted_row_string = inserted_row_string + "'" + inserted_row_value.to_s + "', "
-                end
-              elsif column_structure_object[i][:data_type] == "string" then
-                inserted_row_string = inserted_row_string + "'" + inserted_row_value.strip.to_s + "', "
-              elsif column_structure_object[i][:data_type] == "boolean" then
-                if inserted_row_value == 'on' then
-                  inserted_row_string = inserted_row_string + true.to_s + ", "
-                elsif inserted_row_value == 'off' then
-                  inserted_row_string = inserted_row_string + false.to_s + ", "
-                elsif inserted_row_value == 1 then
-                  inserted_row_string = inserted_row_string + true.to_s + ", "
-                elsif inserted_row_value == 0 then
-                  inserted_row_string = inserted_row_string + false.to_s + ", "
-                elsif inserted_row_value == 'yes' then
-                  inserted_row_string = inserted_row_string + true.to_s + ", "
-                elsif inserted_row_value == 'no' then
-                  inserted_row_string = inserted_row_string + false.to_s + ", "
-                elsif inserted_row_value == '1' then
-                  inserted_row_string = inserted_row_string + true.to_s + ", "
-                elsif inserted_row_value == '0' then
-                  inserted_row_string = inserted_row_string + false.to_s + ", "
-                else
-                  inserted_row_string = inserted_row_string + inserted_row_value.to_s.strip + ", "
+            begin
+              if inserted_row_value == nil then
+                inserted_row_string = inserted_row_string + 'NULL, '
+              elsif ((inserted_row_value.to_s.strip.downcase == 'null') || (inserted_row_value.to_s.strip.downcase) == "nil" || (inserted_row_value.to_s.strip == "")) then
+                inserted_row_string = inserted_row_string + 'NULL, '
+              else
+                if column_structure_object[i][:data_type] == "datetime" then
+                  if column_structure_object[i][:date_format] != "" then
+                    inserted_row_string = inserted_row_string + "'" + DateTime.strptime(inserted_row_value.strip, column_structure_object[i][:date_format]).strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
+                  else
+                    inserted_row_string = inserted_row_string + "'" + DateTime.parse(inserted_row_value.strip).strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
+                  end
+                elsif column_structure_object[i][:data_type] == "integer" then
+                  inserted_row_string = inserted_row_string + inserted_row_value.to_s.to_s + ", "
+                elsif column_structure_object[i][:data_type] == "decimal" then
+                  if column_structure_object[i][:is_money_format] == true
+                    inserted_row_value = inserted_row_value.to_s.tr(column_structure_object[i][:money_symbol],'').strip
+                    inserted_row_string = inserted_row_string + "'" + inserted_row_value.gsub(/,/,'').to_s + "', "
+                  else
+                    inserted_row_string = inserted_row_string + "'" + inserted_row_value.to_s + "', "
+                  end
+                elsif column_structure_object[i][:data_type] == "string" then
+                  inserted_row_string = inserted_row_string + "'" + inserted_row_value.strip.to_s + "', "
+                elsif column_structure_object[i][:data_type] == "boolean" then
+                  if inserted_row_value == 'on' then
+                    inserted_row_string = inserted_row_string + true.to_s + ", "
+                  elsif inserted_row_value == 'off' then
+                    inserted_row_string = inserted_row_string + false.to_s + ", "
+                  elsif inserted_row_value == 1 then
+                    inserted_row_string = inserted_row_string + true.to_s + ", "
+                  elsif inserted_row_value == 0 then
+                    inserted_row_string = inserted_row_string + false.to_s + ", "
+                  elsif inserted_row_value == 'yes' then
+                    inserted_row_string = inserted_row_string + true.to_s + ", "
+                  elsif inserted_row_value == 'no' then
+                    inserted_row_string = inserted_row_string + false.to_s + ", "
+                  elsif inserted_row_value == '1' then
+                    inserted_row_string = inserted_row_string + true.to_s + ", "
+                  elsif inserted_row_value == '0' then
+                    inserted_row_string = inserted_row_string + false.to_s + ", "
+                  else
+                    inserted_row_string = inserted_row_string + inserted_row_value.to_s.strip + ", "
+                  end
                 end
               end
+            rescue  Exception => err
+              puts err
             end
+
             i = i+1
           end
+          puts "++++++++++++++++++++++++++==Chunk string==++++++++++++++++++++++++++++++"
           inserted_row_string = inserted_row_string[0...-2]
           chunk_insert_string = chunk_insert_string + "(#{inserted_row_string}), "
         end
+
         chunk_insert_string = chunk_insert_string[0...-2]
+
+        puts chunk_insert_string
         my_sql="INSERT INTO #{table_name} (#{table_col_str}) Values #{chunk_insert_string}"
         result_set = ActiveRecord::Base.connection.execute(my_sql)
       end
+      puts "************************* Uploaded record complete here...****************************"
       user_table_mapping = UserFileMapping.where("table_name =?", table_name).first
       if user_table_mapping then
         user_table_mapping.is_record_uploaded = true
