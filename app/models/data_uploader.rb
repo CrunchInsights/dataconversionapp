@@ -81,8 +81,6 @@ class DataUploader < ActiveRecord::Base
   end
 
   def self.insert_csv_data(file_path, table_name, column_structure_object)
-    puts "************************* Uploaded enter here...****************************"
-    #byebug
     if column_structure_object.size > 0
       table_columns = []
       column_structure_object.each do |column_name|
@@ -98,7 +96,6 @@ class DataUploader < ActiveRecord::Base
       }
 
       SmarterCSV.process(file_path, options) do |chunk|
-        puts "===========================Enter Smarter CSV================================"
         chunk_insert_string = ''
         chunk.each do |data_hash|
           data_hash = data_hash.to_a
@@ -157,20 +154,18 @@ class DataUploader < ActiveRecord::Base
             end
 
             i = i+1
-          end
-          puts "++++++++++++++++++++++++++==Chunk string==++++++++++++++++++++++++++++++"
+          end         
           inserted_row_string = inserted_row_string[0...-2]
           chunk_insert_string = chunk_insert_string + "(#{inserted_row_string}), "
         end
 
         chunk_insert_string = chunk_insert_string[0...-2]
 
-        puts chunk_insert_string
-        my_sql="INSERT INTO #{table_name} (#{table_col_str}) Values #{chunk_insert_string}"
+        puts chunk_insert_string#{table_name} 
+        my_sql="INSERT INTO \"#{table_name}\" (#{table_col_str}) Values #{chunk_insert_string}"
         result_set = ActiveRecord::Base.connection.execute(my_sql)
-      end
-      puts "************************* Uploaded record complete here...****************************"
-      user_table_mapping = UserFileMapping.where("table_name =?", table_name).first
+      end     
+      user_table_mapping = UserFileMapping.where(:table_name => table_name.to_s).first
       if user_table_mapping then
         user_table_mapping.is_record_uploaded = true
         user_table_mapping.save
@@ -178,10 +173,19 @@ class DataUploader < ActiveRecord::Base
     end
   end
 
-  def self.get_table_data(table_name)
+  def self.get_table_data(table_name, page_size, page_index, column_name, order_type)
     result = []
     begin
-      my_sql="SELECT * FROM #{table_name}"
+
+      my_sql="WITH Orders_cte AS (
+                SELECT *
+                FROM \"#{table_name}\"
+            )
+            SELECT * FROM Orders_cte
+            CROSS JOIN (SELECT Count(*) AS TotalRecord FROM Orders_cte) AS tCountOrders            
+            OFFSET #{page_index} ROWS
+            FETCH NEXT #{page_size} ROWS ONLY;"
+      #my_sql="SELECT * FROM \"#{table_name}\" offset #{page_index} limit #{page_size}  "
       result = ActiveRecord::Base.connection.execute(my_sql)
       return result
     rescue Exception => err
@@ -203,7 +207,7 @@ class DataUploader < ActiveRecord::Base
   def self.drop_table_if_exist(table_name)
     result = []
     begin
-      my_sql = "DROP table #{table_name}"
+      my_sql = "DROP table \"#{table_name}\""
       result = ActiveRecord::Base.connection.execute(my_sql)
       return result
     rescue Exception => err

@@ -1,5 +1,5 @@
 class DataUploadersController < ApplicationController
-  respond_to :html
+  respond_to :html, :js, :json
   add_breadcrumb "Home", :root_path, :options => { :title => "Home" }
   def file_upload
     initalize_breadcrumb("File Upload", fileupload_datauploaders_path)
@@ -7,8 +7,8 @@ class DataUploadersController < ApplicationController
 
   def import
     if params[:file] then
-      uploaded_file_name = params[:file].original_filename.split('.').first.tr(" ","").gsub(/[^0-9A-Za-z]/, '').downcase
-      table_name=uploaded_file_name+SecureRandom.hex(7)
+      uploaded_file_name = params[:file].original_filename      
+      table_name= (current_user.id).to_s + DateTime.now.strftime('%Q')
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name.downcase.pluralize)
       if add_file_detail.errors.any?
         errors = ""
@@ -218,8 +218,8 @@ class DataUploadersController < ApplicationController
                       temp_arr = csv_data[i].collect{|x| x.tr(money_symbol, '').strip}
                       is_data_integer=temp_arr.collect{|val| Float(val.gsub(/,/,''))}
                       max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                      maxL_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                      column_detail[:field_length] = (maxL_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+                      max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
                       column_detail[:data_type] = "decimal"
                       column_detail[:money_symbol] = money_symbol
                     end
@@ -231,10 +231,10 @@ class DataUploadersController < ApplicationController
                 # Check array containing float values only
                 if column_detail[:data_type]=="" then
                   begin
-                    is_data_integer=csv_data[i].collect{|val| Float(val)}
+                    is_data_integer = csv_data[i].collect{|val| Float(val)}
                     max_length_after_decimal = (((csv_data[i].map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                    maxL_length_before_decimal = (((csv_data[i].map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                    column_detail[:field_length] = (maxL_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+                    max_length_before_decimal = (((csv_data[i].map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                    column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
                     column_detail[:data_type] = "decimal"
                   rescue
                     # catch code at here
@@ -244,7 +244,7 @@ class DataUploadersController < ApplicationController
                 # Check array containing string values
                 if column_detail[:data_type]=="" then
                   begin
-                    is_data_integer=csv_data[i].collect{|val| String(val)}
+                    is_data_integer = csv_data[i].collect{|val| String(val)}
                     column_detail[:data_type] = "string"
                   rescue
                     # catch code at here
@@ -280,13 +280,10 @@ class DataUploadersController < ApplicationController
                 user_table_mapping.save
               end
             rescue
-            end
-            puts "************************* Uploaded record thred start here...****************************"
+            end           
             Thread.new do
-              puts "************************* thred  here...****************************"
-              DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail)
-            end
-            puts "************************* Uploaded record thred end here...****************************"
+               DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail)
+            end           
             redirect_to showuploadedschema_datauploaders_path({:table_name => table_name.downcase.pluralize}), notice: "Data Uploaded Successfully"
           else
             redirect_to fileupload_datauploaders_path, :flash => { :error => "Error: #{is_table_created}" }
@@ -322,25 +319,61 @@ class DataUploadersController < ApplicationController
   # find uploaded file records
   def upload_file_record
     initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)
-    @table_record={columns:[], records:[] }
-    @uploaded_records=[]
-    table_name = params[:table_name]
-    @uploadedSchema = DataUploader.get_uploaded_schema(table_name)
-    if @uploadedSchema.size>0
-      response = DataUploader.get_table_data(table_name)
-      if response.to_a.size > 0 then
-        disabled_column = get_user_table_column_info(table_name)
-        @uploadedSchema.each do |schema|
-          @table_record[:columns].append({column_name: schema[:Field], is_disable: (disabled_column.include?schema[:Field]), type: schema[:Type] })
-        end
-        response.values.each do |record|
-          @table_record[:records].append(record)
-        end
+    @table_record = {data:[], draw: 1, recordsTotal:"0", recordsFiltered:"0",columns:[]}
+    @table_name = params[:table_name]
+    page_size = 10
+    page_index = 0
+    draw = 1
+    search_value = '' 
+    order_column_index=0
+    order_column_name =''
+    order_type ="ASC"
+    if params[:search] != nil then
+      search_value = params[:search]["value"]
+    end
+
+    if (params[:length])
+        page_size = params[:length]
+    end
+
+    if (params[:start])
+        page_index = params[:start]
+    end
+
+    if (params[:draw])
+        draw = params[:draw]
+        @table_record[:draw]=draw
+    end    
+
+    if params[:columns] != nil then
+      params[:columns].each do |columns|        
+        @table_record[:columns].append(columns[1]["data"])
       end
-      initalize_breadcrumb("Uploaded File Record(s)", uploadfilerecord_datauploaders_path)
-      respond_with(@uploaded_records,@uploadedSchema,@table_record)
-    else
-      redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema does not exists" }
+    end
+    if params[:order] != nil then
+        params[:order].each do |order|          
+         order_column_index = order[1]["column"]
+         order_type = order[1]["dir"]         
+        end        
+    end 
+   
+    if @table_record[:columns].size > 0      
+      order_column_name=@table_record[:columns][order_column_index.to_i]
+    end  
+
+    response = DataUploader.get_table_data(@table_name, page_size, page_index, order_column_name,order_type)
+    if response.to_a.size > 0 then        
+      response.each do |record|         
+        @table_record[:recordsTotal] = record["totalrecord"]
+        @table_record[:recordsFiltered] = record["totalrecord"]
+        @table_record[:data].append(record)
+      end
+    end
+    initalize_breadcrumb("Uploaded File Record(s)", uploadfilerecord_datauploaders_path)    
+    respond_to do |format| 
+      format.html       
+      format.js  
+      format.json { render :json => @table_record}
     end
 
   end
@@ -375,5 +408,29 @@ class DataUploadersController < ApplicationController
     end
     delete_user_file_mapping_record = UserFileMapping.find_by(:table_name => table_name).destroy
     redirect_to uploadedfile_datauploaders_path, :flash => { :notice => "Data source deleted successfully." }
+  end
+
+  # find uploaded file records
+  def upload_file_columns_for_record
+    @table_columns = {columns: []}
+    table_name = params[:table_name]  
+
+    uploaded_schema = DataUploader.get_uploaded_schema(table_name)
+    if uploaded_schema.size > 0
+      disabled_column = get_user_table_column_info(table_name)
+      uploaded_schema.each do |schema|
+        if !(disabled_column.include?schema[:Field]) then            
+          @table_columns[:columns].append({title: schema[:Field], data: schema[:Field]})
+        end
+      end 
+      puts @table_columns      
+      respond_to do |format| 
+        format.html       
+        format.js  
+        format.json { render :json => @table_columns}
+      end
+    else
+      redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema does not exists" }
+    end
   end
 end

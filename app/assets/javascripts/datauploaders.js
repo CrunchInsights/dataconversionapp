@@ -23,7 +23,7 @@ $('#file').change(function(){
 });
 
 $(function(){
-    $('.dataTable').dataTable();//use for simple table into datatable
+    $('.custom_table').dataTable();//use for simple table into datatable
 });
 
 //Edit button click on table schema screen

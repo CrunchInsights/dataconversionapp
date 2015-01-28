@@ -1,32 +1,6 @@
 <h3>File Records</h3>
-<table id="uploadedRecords" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%">
-  <thead>
-  <tr>
-    <% if @table_record[:columns].size > 0 then %>
-        <% @table_record[:columns].each do |column|  %>
-            <td>
-              <%= column[:column_name] %>
-            </td>
-      <%end%>
-  <% end %>
-  </tr>
-  </thead>
-  <tbody>
-  <% if @table_record[:records].size > 0 then %>
-    <% @table_record[:records].each do |result|  %>
-        <tr>
-          <% result.each do |record|%>
-              <td><%if @table_record[:columns][result.index(record)][:type] == "bool" then %>
-                        <% if record == "t" then %> TRUE
-                        <%elsif record == "f" then %>FALSE
-                        <% else %><%= record %><% end %>
-                  <% else %><%= record %>
-                  <% end %>
-              </td>
-          <%end%>
-        </tr>
-    <%end%>
-  <% end %>
-  </tbody>
+<input type="hidden" id="page_params" value=<%= @table_name %>>
+<table id="uploadedRecords" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%">     
 </table>
 <%= javascript_include_tag('datauploaders.js') %>
+<%= javascript_include_tag('custom_pagination.js') %>
