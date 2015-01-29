@@ -1,8 +1,36 @@
-.trendAnalysisChart {
+thead, .navbar-default, ol.breadcrumb{
+    background: none repeat scroll 0 0 #e1e1d2;
+    margin: 0 !important;    
+}
+
+h1, h2, h3, h4, h5{
+    margin: 5px 0 5px 0 !important;
+    padding: 5px 0 5px 0 !important;
+}
+
+.table > tbody > tr > td, .table > tbody > tr > th{
+    padding: 3px !important;
+    vertical-align: middle !important;
+    padding-left: 5px !important;
+}
+
+.table > thead > tr > th, .table > thead > tr > td, .table > tfoot > tr > th, .table > tfoot > tr > td{
+    padding: 6px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+}
+
+div.FixedHeader_Cloned th,
+div.FixedHeader_Cloned td {
+    background-color: white !important;
+}
+
+/*.trendAnalysisChart {
     text-align: right;
     color: gray;
     min-height: 2em;
 }
+
 .table-sparkline {
     margin: 0 auto;
     border-collapse: collapse;
@@ -28,7 +56,7 @@ thead th {
     border-radius: 3px;
     box-shadow: 1px 1px 2px #888;
     padding: 8px;
-}
+}*/
 
 .modal-dialog{
     margin: auto  !important;

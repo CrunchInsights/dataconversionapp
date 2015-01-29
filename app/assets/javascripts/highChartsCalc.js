@@ -143,7 +143,7 @@ $(function () {
                 tooltip: {
                    formatter:function(){
                        var split_arr=((this.points[0].series.name).toUpperCase()).split('/');
-                       return '<span><b>' + split_arr[0]+ '-</b> <br> Value: ' +split_arr[1]+ this.x + ', Count: '+ this.y+ '</sapn>';
+                       return '<span><b>' + split_arr[0]+ '-</b> <br> Value: ' +split_arr[1]+ this.x + '<br> Count: '+ this.y+ '</sapn>';
                    }
                 },
                 chart: chart

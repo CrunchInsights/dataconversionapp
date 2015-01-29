@@ -48,6 +48,7 @@ class DataUploadersController < ApplicationController
                             is_nullable: false,
                             data_type: "",
                             date_format:"",
+                            time_format: "",
                             field_length: "0",
                             money_symbol: "",
                             is_money_format: false,
@@ -131,6 +132,7 @@ class DataUploadersController < ApplicationController
                       is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%m %d %Y")}
                       column_detail[:data_type] = "datetime"
                       column_detail[:date_format] = "%m" + input_field_splitter_used + "%d" + input_field_splitter_used + "%Y"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
                     rescue
                       # catch code at here
                     end
@@ -142,6 +144,7 @@ class DataUploadersController < ApplicationController
                       is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%d %m %Y")}
                       column_detail[:data_type] = "datetime"
                       column_detail[:date_format] = "%d" + input_field_splitter_used + "%m" + input_field_splitter_used + "%Y"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
                     rescue
                       # catch code at here
                     end
@@ -153,6 +156,7 @@ class DataUploadersController < ApplicationController
                       is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%Y %m %d")}
                       column_detail[:data_type] = "datetime"
                       column_detail[:date_format]="%Y" + input_field_splitter_used +  "%m" + input_field_splitter_used + "%d"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
                     rescue
                       # catch code at here
                     end
@@ -164,6 +168,7 @@ class DataUploadersController < ApplicationController
                       is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%Y %d %m")}
                       column_detail[:data_type] = "datetime"
                       column_detail[:date_format] = "%Y" + input_field_splitter_used +  "%d" + input_field_splitter_used + "%m"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
                     rescue
                       # catch code at here
                     end
@@ -189,6 +194,15 @@ class DataUploadersController < ApplicationController
                     # catch code at here
                   end
                 end
+
+                if column_detail[:data_type] == "" then
+                  begin
+                    is_data_integer=csv_data[i].collect{|val| DateTime.parse(val)}
+                    column_detail[:data_type] = "datetime"
+                  rescue
+                    # catch code at here
+                  end
+                end                
 
                 # check array containing money format
                 if column_detail[:data_type]=="" then
@@ -283,7 +297,7 @@ class DataUploadersController < ApplicationController
             end           
             Thread.new do
                DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail)
-            end           
+            end            
             redirect_to showuploadedschema_datauploaders_path({:table_name => table_name.downcase.pluralize}), notice: "Data Uploaded Successfully"
           else
             redirect_to fileupload_datauploaders_path, :flash => { :error => "Error: #{is_table_created}" }
@@ -302,6 +316,11 @@ class DataUploadersController < ApplicationController
     @uploaded_schema = DataUploader.get_uploaded_schema(@table_name)
     if @uploaded_schema.size>0
       @disabled_column = get_user_table_column_info(@table_name)
+      check_record_uploaded = UserFileMapping.where(:table_name => @table_name).first
+      @is_record_uploaded = false
+      if check_record_uploaded then
+        @is_record_uploaded = check_record_uploaded.is_record_uploaded
+      end
       initalize_breadcrumb("Uploaded File Schema", showuploadedschema_datauploaders_path({:table_name => @table_name}))
     else
       redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema not exists" }

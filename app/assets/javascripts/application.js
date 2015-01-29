@@ -17,6 +17,6 @@
 //= require alertify.min
 //= require highcharts
 //= require jquery.dataTables.min
-//=require dataTable.bootstrap
+//= require dataTable.bootstrap
 //= require migrate
 

@@ -13,8 +13,7 @@ $(document).ready(function() {
                 "serverSide": true,
                 "bDestroy": true,
                 "bJQueryUI": true,
-                "aoColumns": data.columns,
-
+                "aoColumns": data.columns,               
                 "ajax": {
                     "url": "uploadfilerecord",
                     "type": "POST",

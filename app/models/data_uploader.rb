@@ -86,7 +86,7 @@ class DataUploader < ActiveRecord::Base
       column_structure_object.each do |column_name|
         table_columns.append(column_name[:column_name])
       end
-      table_col_str = table_columns.map{|col| "#{col}"}.join(', ')
+      table_col_str = table_columns.map{|col| "\"#{col}\""}.join(', ')
       options = {
           :row_sep => :auto,
           :chunk_size => 50,
@@ -112,7 +112,11 @@ class DataUploader < ActiveRecord::Base
               else
                 if column_structure_object[i][:data_type] == "datetime" then
                   if column_structure_object[i][:date_format] != "" then
-                    inserted_row_string = inserted_row_string + "'" + DateTime.strptime(inserted_row_value.strip, column_structure_object[i][:date_format]).strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
+                    if column_structure_object[i][:time_format] != "" then
+                      inserted_row_string = inserted_row_string + "'" + DateTime.strptime(inserted_row_value.strip, "#{column_structure_object[i][:date_format]} #{column_structure_object[i][:time_format]}").strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
+                    else
+                      inserted_row_string = inserted_row_string + "'" + DateTime.strptime(inserted_row_value.strip, column_structure_object[i][:date_format]).strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
+                    end
                   else
                     inserted_row_string = inserted_row_string + "'" + DateTime.parse(inserted_row_value.strip).strftime("%Y-%m-%d %H:%M:%S").to_s + "', "
                   end
@@ -156,7 +160,9 @@ class DataUploader < ActiveRecord::Base
             i = i+1
           end         
           inserted_row_string = inserted_row_string[0...-2]
-          chunk_insert_string = chunk_insert_string + "(#{inserted_row_string}), "
+          if (!((inserted_row_string.split(", ").uniq.size == 1) && (inserted_row_string.split(", ").uniq.include? "NULL"))) then
+            chunk_insert_string = chunk_insert_string + "(#{inserted_row_string}), "
+          end
         end
 
         chunk_insert_string = chunk_insert_string[0...-2]
@@ -221,6 +227,20 @@ class DataUploader < ActiveRecord::Base
       return result
     rescue Exception => err
       return result
+    end
+  end
+
+  def self.check_is_date_time(temp_arr, selected_date_format)
+    begin
+      is_data_time_format = temp_arr.collect{|val| DateTime.strptime(val, "#{selected_date_format} %H:%M:%S")}
+      return "%H:%M:%S"
+    rescue
+      begin
+        is_data_time_format = temp_arr.collect{|val| DateTime.strptime(val, "#{selected_date_format} %H:%M")}
+        return "%H:%M"
+      rescue        
+        return ""
+      end 
     end
   end
 end
