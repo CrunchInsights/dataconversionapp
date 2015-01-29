@@ -173,19 +173,28 @@ class DataUploader < ActiveRecord::Base
     end
   end
 
-  def self.get_table_data(table_name, page_size, page_index, column_name, order_type)
+  def self.get_table_data(table_name, page_size, page_index, column_name, order_type, search_value, column_arr)
     result = []
     begin
-
-      my_sql="WITH Orders_cte AS (
-                SELECT *
-                FROM \"#{table_name}\"
-            )
-            SELECT * FROM Orders_cte
-            CROSS JOIN (SELECT Count(*) AS TotalRecord FROM Orders_cte) AS tCountOrders            
-            OFFSET #{page_index} ROWS
-            FETCH NEXT #{page_size} ROWS ONLY;"
-      #my_sql="SELECT * FROM \"#{table_name}\" offset #{page_index} limit #{page_size}  "
+      sch_value=""
+        if search_value!=""
+          sch_value=sch_value+"WHERE"
+          i=0
+          column_arr.each do |column|           
+            if i== 0
+              sch_value=sch_value+" CAST( \"#{column}\" AS VARCHAR) LIKE '%#{search_value}%' "
+            else
+              sch_value=sch_value+" OR CAST(\"#{column}\" AS VARCHAR) LIKE '%#{search_value}%' "
+            end         
+           i=i+1
+          end 
+        end 
+      my_sql="SELECT * FROM \"#{table_name}\" 
+              CROSS JOIN ( SELECT Count(*) AS TotalRecord FROM \"#{table_name}\") AS tCountOrders 
+              CROSS JOIN ( SELECT Count(*) AS FilterRecord FROM \"#{table_name}\" #{sch_value}) AS trecord  
+              ORDER BY \"#{column_name}\" #{order_type} 
+              OFFSET #{page_index} ROWS 
+              FETCH NEXT #{page_size} ROWS ONLY;"            
       result = ActiveRecord::Base.connection.execute(my_sql)
       return result
     rescue Exception => err

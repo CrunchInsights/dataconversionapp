@@ -361,13 +361,13 @@ class DataUploadersController < ApplicationController
       order_column_name=@table_record[:columns][order_column_index.to_i]
     end  
 
-    response = DataUploader.get_table_data(@table_name, page_size, page_index, order_column_name,order_type)
+    response = DataUploader.get_table_data(@table_name, page_size, page_index, order_column_name,order_type,search_value, @table_record[:columns])
     if response.to_a.size > 0 then        
       response.each do |record|         
         @table_record[:recordsTotal] = record["totalrecord"]
-        @table_record[:recordsFiltered] = record["totalrecord"]
+        @table_record[:recordsFiltered] = record["filterrecord"]
         @table_record[:data].append(record)
-      end
+      end     
     end
     initalize_breadcrumb("Uploaded File Record(s)", uploadfilerecord_datauploaders_path)    
     respond_to do |format| 

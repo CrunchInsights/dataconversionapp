@@ -1,7 +1,7 @@
 class TrendAnalysis < ActiveRecord::Base
   def self.get_enabled_column_data(data, table_name)
     # find only enable column's records
-    my_sql="SELECT #{(data.collect{|obj| obj[:column_name]}).join(', ')} FROM #{table_name}"
+    my_sql="SELECT #{(data.collect{|obj| obj[:column_name]}).join(', ')} FROM \"#{table_name}\""
     records = ActiveRecord::Base.connection.execute(my_sql)
     if records.to_a.size > 0 then
       records.values.each do |result|
