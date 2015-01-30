@@ -13,15 +13,20 @@ $(document).ready(function() {
                 "serverSide": true,
                 "bDestroy": true,
                 "bJQueryUI": true,
-                "aoColumns": data.columns,               
+                "aoColumns": data.columns, 
+                "scrollX" :true,                          
                 "ajax": {
                     "url": "uploadfilerecord",
                     "type": "POST",
                     "data": {
                        table_name: $('#page_params').val()
                     }                     
-                },        
+                }      
             });
+            $( window ).resize(function() {
+                $('div.dataTables_scrollBody table thead th').removeClass('sorting_asc').removeClass('sorting').removeClass('sorting_desc');
+            });           
         }
-    });   
-} );
+    });
+});
+

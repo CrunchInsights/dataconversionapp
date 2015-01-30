@@ -30,6 +30,7 @@ class TrendAnalysis < ActiveRecord::Base
         end
       end
     end
+    
     data.each do |result_analysis|
       rec_hash = UserTableColumnInformation.where("table_name =? and column_name =?", table_name, result_analysis[:column_name]).first
       if rec_hash then

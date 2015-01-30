@@ -18,14 +18,41 @@ class DataUploadersController < ApplicationController
         redirect_to fileupload_datauploaders_path, :flash => { :error => errors }
       else
         csv_data = []
+        row_id = 0
+        max_row_size = 0
+        column_name = ''        
+        columns = []
+        is_repeated_column = false
+        error_record_list = []
+        error_row_num_list = []
         CSV.foreach(params[:file].path) do |row|
-          csv_data.append(row.to_a)
+          row_id = row_id + 1
+          if row_id  == 1 then
+            columns = row.to_a
+            if columns.uniq.size != columns.size then
+              is_repeated_column = true
+              break
+            end
+            max_row_size = columns.size
+          else
+            if max_row_size == row.to_a.size then
+              temp_row = row.to_a
+              if DataUploader.contain_blank_value(temp_row) then
+                error_row_num_list.append(row_id)
+                error_record_list.append({:row_id => row_id, :error => "Record cannot be inserted due to blank values for all columns", :error_record => row.to_a})
+              else
+                csv_data.append(row.to_a)
+              end              
+            else
+              error_row_num_list.append(row_id)
+              error_record_list.append({:row_id => row_id, :error => "Record cannot be inserted due to unmatched length with header", :error_record => row.to_a})
+            end
+          end          
         end
+
         i = 0
-        column_name = ''
         @columns_detail = []
-        columns = csv_data.shift
-        if columns.size != columns.uniq.size  then
+        if is_repeated_column  then
           redirect_to fileupload_datauploaders_path, :flash => { :error => 'In uploaded file columns are repeated' }
         else
           csv_data = csv_data.transpose
@@ -53,6 +80,7 @@ class DataUploadersController < ApplicationController
                             money_symbol: "",
                             is_money_format: false,
                             money_symbol_position: "",
+                            is_percentage: false,
                             is_unique: true}
 
             #trim blank spaces at beginning and end
@@ -193,16 +221,7 @@ class DataUploadersController < ApplicationController
                   rescue
                     # catch code at here
                   end
-                end
-
-                if column_detail[:data_type] == "" then
-                  begin
-                    is_data_integer=csv_data[i].collect{|val| DateTime.parse(val)}
-                    column_detail[:data_type] = "datetime"
-                  rescue
-                    # catch code at here
-                  end
-                end                
+                end                              
 
                 # check array containing money format
                 if column_detail[:data_type]=="" then
@@ -242,6 +261,35 @@ class DataUploadersController < ApplicationController
                   end
                 end
 
+                # check array containing percentage format
+                if column_detail[:data_type]=="" then
+                  begin
+                    symbol_length = 1
+                    percent_symbols = ['%']
+                    percent_symbols.each do |symbol|
+                      if (csv_data[i].collect{|k| k[0...symbol_length]}.uniq)[0] == symbol then
+                        column_detail[:is_percentage] = true
+                        break
+                      end
+                      if (csv_data[i].collect{|k| k[(k.size-symbol_length)...k.size]}.uniq)[0] == symbol then
+                        column_detail[:is_percentage] = true
+                        break
+                      end
+                    end
+
+                    if column_detail[:is_percentage] then
+                      temp_arr = csv_data[i].collect{|x| x.tr('%', '').strip}
+                      is_data_integer=temp_arr.collect{|val| Float(val.gsub(/,/,''))}
+                      max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+                      column_detail[:data_type] = "decimal"
+                    end
+                  rescue
+                    # catch code at here
+                  end
+                end
+
                 # Check array containing float values only
                 if column_detail[:data_type]=="" then
                   begin
@@ -250,6 +298,15 @@ class DataUploadersController < ApplicationController
                     max_length_before_decimal = (((csv_data[i].map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
                     column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
                     column_detail[:data_type] = "decimal"
+                  rescue
+                    # catch code at here
+                  end
+                end
+
+                if column_detail[:data_type] == "" then
+                  begin
+                    is_data_integer=csv_data[i].collect{|val| DateTime.parse(val)}
+                    column_detail[:data_type] = "datetime"
                   rescue
                     # catch code at here
                   end
@@ -271,17 +328,18 @@ class DataUploadersController < ApplicationController
             end
             @columns_detail.append(column_detail)
             i=i+1
-          end
+          end         
           is_table_created = DataUploader.create_dynamic_table(table_name.downcase.pluralize, @columns_detail)
           if is_table_created
             begin
               @columns_detail.each do |column|
-                if column[:is_money_format]==true
+                if ((column[:is_money_format]==true) || (column[:is_percentage] == true)) then
                   update_column_info=UserTableColumnInformation.create(
                       table_name: table_name.downcase.pluralize,
                       column_name: column[:column_name],
                       money_format:  column[:money_symbol],
                       is_disable: false,
+                      is_percentage_value: column[:is_percentage],
                       created_by: current_user.id,
                       created_on: Time.now ,
                       modified_by: current_user.id,
@@ -291,13 +349,19 @@ class DataUploadersController < ApplicationController
               user_table_mapping = UserFileMapping.where("table_name =?", table_name.downcase.pluralize).first
               if user_table_mapping then
                 user_table_mapping.is_table_created = true
+                user_table_mapping.has_error_record = error_row_num_list.size > 0?true:false
                 user_table_mapping.save
               end
             rescue
             end           
             Thread.new do
-               DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail)
-            end            
+               DataUploader.insert_csv_data(params[:file].path, table_name.downcase.pluralize, @columns_detail, error_row_num_list)
+            end
+            if error_record_list.size > 0 then
+              Thread.new do
+                 DataUploader.insert_error_detail(table_name.downcase.pluralize, error_record_list)
+              end
+            end
             redirect_to showuploadedschema_datauploaders_path({:table_name => table_name.downcase.pluralize}), notice: "Data Uploaded Successfully"
           else
             redirect_to fileupload_datauploaders_path, :flash => { :error => "Error: #{is_table_created}" }
@@ -441,8 +505,7 @@ class DataUploadersController < ApplicationController
         if !(disabled_column.include?schema[:Field]) then            
           @table_columns[:columns].append({title: schema[:Field], data: schema[:Field]})
         end
-      end 
-      puts @table_columns      
+      end          
       respond_to do |format| 
         format.html       
         format.js  

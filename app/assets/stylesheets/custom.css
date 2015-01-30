@@ -1,11 +1,40 @@
 thead, .navbar-default, ol.breadcrumb{
-    background: none repeat scroll 0 0 #e1e1d2;
+    background: none repeat scroll 0 0 #004669;
     margin: 0 !important;    
 }
-
+ol.breadcrumb{
+    margin: 0px 0px 6px 0px !important;
+}
+.navbar-default .navbar-nav > li > a {
+color: whitesmoke;
+}
+.navbar-default .navbar-brand {
+color: whitesmoke;
+font-weight: bold;
+font-size: 20px;
+}
+.breadcrumb > li {
+display: inline-block;
+color: whitesmoke;
+}
 h1, h2, h3, h4, h5{
     margin: 5px 0 5px 0 !important;
     padding: 5px 0 5px 0 !important;
+}
+.table > thead > tr > th, .table > thead > tr > td{
+    color: whitesmoke;
+    font-weight: lighter;
+    text-transform: uppercase;
+    
+}
+
+.table > thead > tr >  th:first-child, .table > thead > tr >  td:first-child{
+  border-top-left-radius: 4px;
+  border-left: 0;
+}
+.table > thead > tr >  th:last-child, .table > thead > tr >  td:last-child {
+  border-top-right-radius: 4px;
+  border-right: 0;
 }
 
 .table > tbody > tr > td, .table > tbody > tr > th{
@@ -23,6 +52,11 @@ h1, h2, h3, h4, h5{
 div.FixedHeader_Cloned th,
 div.FixedHeader_Cloned td {
     background-color: white !important;
+}
+
+div.dataTables_scrollBody{
+    position: relative !important;
+    top: -10px !important;
 }
 
 /*.trendAnalysisChart {
