@@ -11,7 +11,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20150122110814) do
+ActiveRecord::Schema.define(version: 20150130111004) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -59,6 +59,22 @@ ActiveRecord::Schema.define(version: 20150122110814) do
   end
 
   create_table "crunchinsightssampledataset4s", id: false, force: true do |t|
+    t.datetime "date",                null: false
+    t.string   "browser",   limit: 8, null: false
+    t.string   "country",   limit: 8, null: false
+    t.boolean  "tutorial",            null: false
+    t.boolean  "retainted",           null: false
+  end
+
+  create_table "crunchinsightssampledataset5s", id: false, force: true do |t|
+    t.datetime "date",                null: false
+    t.string   "browser",   limit: 8, null: false
+    t.string   "country",   limit: 8, null: false
+    t.boolean  "tutorial",            null: false
+    t.boolean  "retainted",           null: false
+  end
+
+  create_table "crunchinsightssampledataset6s", id: false, force: true do |t|
     t.datetime "date",                null: false
     t.string   "browser",   limit: 8, null: false
     t.string   "country",   limit: 8, null: false
@@ -258,6 +274,15 @@ ActiveRecord::Schema.define(version: 20150122110814) do
     t.decimal "averageprice",   precision: 6, scale: 2, null: false
   end
 
+  create_table "table_error_records", force: true do |t|
+    t.string   "table_name"
+    t.integer  "row_id"
+    t.string   "error_message"
+    t.text     "error_record"
+    t.datetime "created_at"
+    t.datetime "updated_at"
+  end
+
   create_table "user_file_mappings", force: true do |t|
     t.integer  "user_id"
     t.string   "file_name",          limit: 100,                 null: false
@@ -268,6 +293,7 @@ ActiveRecord::Schema.define(version: 20150122110814) do
     t.datetime "modified_on"
     t.boolean  "is_record_uploaded",             default: false
     t.boolean  "is_table_created",               default: false
+    t.boolean  "has_error_record",               default: false
   end
 
   add_index "user_file_mappings", ["table_name"], name: "index_user_file_mappings_on_table_name", unique: true, using: :btree
@@ -284,6 +310,7 @@ ActiveRecord::Schema.define(version: 20150122110814) do
     t.datetime "modified_on"
     t.datetime "created_at"
     t.datetime "updated_at"
+    t.boolean  "is_percentage_value", default: false
   end
 
   create_table "users", force: true do |t|
