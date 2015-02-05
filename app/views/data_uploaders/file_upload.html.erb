@@ -1,6 +1,6 @@
 <h2>Upload CSV for Data Analytics</h2>
 
-<%= form_tag import_datauploaders_path, multipart: true, id: 'uploadForm' do %>
+<%= form_tag fileuploadtoamazon_datauploaders_path, multipart: true, id: 'uploadForm' do %>
     <div class="row"><div class="col-sm-3"><%= file_field_tag :file %></div>
       <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary", :onclick => "show_loading_window();" %></div></div>
 <% end %>

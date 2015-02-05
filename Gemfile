@@ -1,10 +1,8 @@
 source 'http://rubygems.org'
 
-
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
-gem 'rails', '4.1.0'
-# Use SCSS for stylesheets
-gem 'sass-rails', '~> 4.0.3'
+gem 'rails', '4.1.9'
+#gem 'thin'
 # Use Uglifier as compressor for JavaScript assets
 gem 'uglifier', '>= 1.3.0'
 # Use CoffeeScript for .js.coffee assets and views
@@ -19,21 +17,26 @@ gem 'bootstrap-sass', '3.2.0.0'
 gem 'devise'
 gem 'smarter_csv'
 gem 'pg'
-gem 'foreman'     #To deploy the app on heroku
 gem 'breadcrumbs_on_rails'
-
-group :development do
-  gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
+gem 'aws-sdk'
+gem 'dragonfly'
+gem 'dragonfly-s3_data_store'
+gem 'remotipart', '~> 1.2'
+#gem 'compass-rails'
+#gem 'compass'
+gem 'jquery-fileupload-rails', github: 'Springest/jquery-fileupload-rails'
+gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
+group :development do 
   gem 'spring' # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'quiet_assets'
-
-  gem 'byebug'
-  gem 'debase'
-  #gem 'better_errors'
+  gem 'byebug' 
+  gem 'better_errors'
+  gem 'binding_of_caller'
 end
 
 group :production do
-  gem 'rails_12factor'             #Assets Pipelining required in heroku
+  gem 'rails_12factor' #Assets Pipelining required in heroku
+  gem 'rack-cache'            
 end
 
 group :doc do

@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     collection do
       get :fileupload, :action => 'file_upload'
       post :import
+      post :fileuploadtoamazon, :action=>'file_upload_to_amazon'
       post :changetablecolumndetail, :action=>'change_table_column_detail'
       get :showuploadedschema, :action => 'show_uploaded_schema'
       get :uploadedfile, :action => 'uploaded_file'
