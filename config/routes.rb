@@ -10,6 +10,7 @@ Rails.application.routes.draw do
       get :showuploadedschema, :action => 'show_uploaded_schema'
       get :uploadedfile, :action => 'uploaded_file'
       get :uploadfilerecord, :action=>'upload_file_record'
+      get :uploadfilerecordjson, :action=>'upload_file_record_json'
       post :uploadfilerecord, :action=>'upload_file_record'
       delete :columnexcludeinclude, :action=>'column_exclude_include'
       delete :deleteuserfilemappingrecord, :action=>'delete_user_file_mapping_record'

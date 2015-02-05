@@ -6,6 +6,7 @@ class DataUploadersController < ApplicationController
     initalize_breadcrumb("File Upload", fileupload_datauploaders_path)
   end
   def file_upload_to_amazon
+    puts " submit request "
       table_name= (current_user.id).to_s + DateTime.now.strftime('%Q').downcase.pluralize
       uploaded_file_name = params[:file].original_filename  
       #insert into a record user file mapping ....       
@@ -475,6 +476,25 @@ class DataUploadersController < ApplicationController
       end     
     end
     initalize_breadcrumb("Uploaded File Record(s)", uploadfilerecord_datauploaders_path)    
+    respond_to do |format| 
+      format.html       
+      format.js  
+      format.json { render :json => @table_record}
+    end
+
+  end
+
+   # find uploaded file records
+  def upload_file_record_json
+   initalize_breadcrumb("Uploaded File Record(s)", uploadfilerecord_datauploaders_path) 
+    @table_name = params[:table_name]   
+    @table_record=[]
+    response = DataUploader.get_table_data_without_pagination(@table_name)
+    if response.to_a.size > 0 then        
+      response.each do |record| 
+        @table_record.append(record)
+      end     
+    end       
     respond_to do |format| 
       format.html       
       format.js  

@@ -218,6 +218,16 @@ class DataUploader < ActiveRecord::Base
       return result
     end
   end
+  def self.get_table_data_without_pagination(table_name)
+    result = []
+    begin      
+      my_sql="SELECT * FROM \"#{table_name}\"               "            
+      result = ActiveRecord::Base.connection.execute(my_sql)
+      return result
+    rescue Exception => err
+      return result
+    end
+  end
 
   def self.check_table_exist(table_name)
     result = []
