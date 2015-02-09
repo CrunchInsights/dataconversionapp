@@ -81,6 +81,7 @@ class DataUploader < ActiveRecord::Base
   end
 
   def self.insert_csv_data(csv_file_data, table_name, column_structure_object, error_row_num_list)
+    puts ":::::::::::::::::: insert process start here ::::::::::::::::::::::::::::"   
     if column_structure_object.size > 0
       table_columns = []
       column_structure_object.each do |column_name|
@@ -95,7 +96,7 @@ class DataUploader < ActiveRecord::Base
           :remove_values_matching => nil
       }
       row_num = 0      
-      SmarterCSV.process(csv_file_data, options) do |chunk|        
+      SmarterCSV.process(csv_file_data, options).each do |chunk|        
         chunk_insert_string = ''
         puts ":::::::::::::::::: CHUNK :::::::::::::::::::::::"
         puts chunk
