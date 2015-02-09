@@ -1,4 +1,3 @@
-
 thead, .navbar-default, ol.breadcrumb{
     background: none repeat scroll 0 0 #004669;
     margin: 0 !important;    
@@ -7,16 +6,16 @@ ol.breadcrumb{
     margin: 0px 0px 6px 0px !important;
 }
 .navbar-default .navbar-nav > li > a {
-color: whitesmoke;
+	color: whitesmoke;
 }
 .navbar-default .navbar-brand {
-color: whitesmoke;
-font-weight: bold;
-font-size: 20px;
+	color: whitesmoke;
+	font-weight: bold;
+	font-size: 20px;
 }
 .breadcrumb > li {
-display: inline-block;
-color: whitesmoke;
+	display: inline-block;
+	color: whitesmoke;
 }
 h1, h2, h3, h4, h5{
     margin: 5px 0 5px 0 !important;
@@ -88,7 +87,7 @@ thead th {
 .highcharts-tooltip>span {
     background: lightpink;
     border: 1px solid silver;
-    border-radius: 3px;
+ '8   border-radius: 3px;
     box-shadow: 1px 1px 2px #888;
     padding: 8px;
 }*/
@@ -107,4 +106,38 @@ thead th {
     left: 35% !important;
     top: 45% !important;
     width: auto !important;
+}
+
+.progress-wrapper {
+  display: none;
+}
+
+#dropzone {
+  background: palegreen;
+  width: 150px;
+  text-align: center;
+  font-weight: bold;
+  height: 50px;
+  line-height: 50px;
+  border: 1px solid darken(palegreen, 10%);
+  border-radius: 10px;
+}
+
+#dropzone.in {
+  width: 600px;
+  height: 200px;
+  line-height: 200px;
+  font-size: larger;
+}
+
+#dropzone.hover {
+  background: lawngreen;
+  border: 1px solid darken(lawngreen, 10%);
+}
+
+#dropzone.fade {
+  opacity: 1;
+  transition-duration: 0.5s;
+  transition-property: all;
+  transition-timing-function: ease-out;
 }

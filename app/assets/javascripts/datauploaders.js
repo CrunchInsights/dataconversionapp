@@ -35,9 +35,10 @@ function edit_button_click(view){
     (tr.find('td[is_button_column="yes"]')).find('a[button_type = "save"]').show();
 }
 
-function show_loading_window() {
+/*function show_loading_window() {
     $("#div_loading_window").modal('show');
-}
+}*/
+
 function show_message(message, message_type, obj,is_use_clone){
     var hyper_link_exist =$(obj).parent().find('a').length;
     var html='';
@@ -70,7 +71,78 @@ $(window).on('popstate', function() {
         window.location.reload();
     }
 });
-/*$(document).ready(function () {
 
-})*/;
+$(document).ready(function () {
+	
+	var multiple_photos_form = $('#uploadForm');
+    var wrapper = multiple_photos_form.find('.progress-wrapper');
+    wrapper.hide();
+    var bitrate = wrapper.find('.bitrate');
+    var progress_bar = wrapper.find('.progress-bar');
+
+    multiple_photos_form.fileupload({
+      dataType: 'script',
+      dropZone: $('#dropzone'),
+      add: function (e, data) {
+        types = /(\.|\/)(comma-separated-values|vnd.ms-excel|csv)$/i;
+        file = data.files[0];
+        if (types.test(file.type) || types.test(file.name)) {
+          data.submit();
+        }
+        else { alert(file.name + " must be csv"); }
+      }
+    });
+   
+    multiple_photos_form.on('fileuploadstart', function() {    	
+      progress_bar.width(0);
+      wrapper.show();
+    });
+
+    multiple_photos_form.on('fileuploaddone', function() {    	
+      wrapper.hide();
+      progress_bar.width(0);
+    });
+
+    multiple_photos_form.on('fileuploadsubmit', function (e, data) {
+    	console.log("3");
+      data.formData = {'photo[author]': $('#photo_author').val()};
+    });
+
+    multiple_photos_form.on('fileuploadprogressall', function (e, data) {
+    	console.log("4");
+      bitrate.text((data.bitrate / 1024).toFixed(2) + 'Kb/s');
+      var progress = parseInt(data.loaded / data.total * 100, 10);
+      progress_bar.css('width', progress + '%').text(progress + '%');
+    });
+	
+	
+	
+	$(document).bind('dragover', function (e) {
+      var dropZone = $('#dropzone'),
+              timeout = window.dropZoneTimeout;
+      if (!timeout) {
+        dropZone.addClass('in');
+      } else {
+        clearTimeout(timeout);
+      }
+      var found = false,
+              node = e.target;
+      do {
+        if (node === dropZone[0]) {
+          found = true;
+          break;
+        }
+        node = node.parentNode;
+      } while (node != null);
+      if (found) {
+        dropZone.addClass('hover');
+      } else {
+        dropZone.removeClass('hover');
+      }
+      window.dropZoneTimeout = setTimeout(function () {
+        window.dropZoneTimeout = null;
+        dropZone.removeClass('in hover');
+      }, 100);
+    });		
+});
 

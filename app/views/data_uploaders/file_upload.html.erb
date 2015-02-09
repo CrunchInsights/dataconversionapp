@@ -1,8 +1,16 @@
 <h2>Upload CSV for Data Analytics</h2>
-
-<%= form_tag fileuploadtoamazon_datauploaders_path, multipart: true, id: 'uploadForm' do %>
+<div id="dropzone" class="fade">Drop files here</div>
+<%= form_tag fileuploadtoamazon_datauploaders_path, multipart: true, id: 'uploadForm' do %>	
     <div class="row"><div class="col-sm-3"><%= file_field_tag :file %></div>
-      <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary", :onclick => "show_loading_window();" %></div></div>
+    <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary" %></div></div>
+    <div class="progress-wrapper">
+    <p>Bitrate: <span class="bitrate"></span></p>
+    <div class="progress">
+      <div class="progress-bar" role="progressbar">
+        0%
+      </div>
+    </div>
+  </div>  
 <% end %>
 <div id="div_loading_window" class="modal fade in" style="width: 100% !Important; overflow-y: hidden; height: 100% !Important;">
   <%= image_tag("ajax-loader.gif", :class => "modal-dialog") %>
