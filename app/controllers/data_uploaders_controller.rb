@@ -382,7 +382,7 @@ class DataUploadersController < ApplicationController
             end
             if error_record_list.size > 0 then
               Thread.new do
-                 DataUploader.insert_error_detail(table_name.downcase.pluralize, error_record_list)
+                # DataUploader.insert_error_detail(table_name.downcase.pluralize, error_record_list)
               end
             end
             redirect_to showuploadedschema_datauploaders_path({:table_name => table_name.downcase.pluralize}), notice: "Data Uploaded Successfully"
