@@ -1,6 +1,6 @@
 <h2>Upload CSV for Data Analytics</h2>
 <div id="dropzone" class="fade">Drop files here</div>
-<%= form_tag fileuploadtoamazon_datauploaders_path, :remote: true, multipart: true, id: 'uploadForm' do %>	
+<%= form_tag fileuploadtoamazon_datauploaders_path, multipart: true, id: 'uploadForm' do %>	
     <div class="row"><div class="col-sm-3"><%= file_field_tag :file %></div>
     <!-- <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary" %></div> --></div>
     <div class="progress-wrapper">
