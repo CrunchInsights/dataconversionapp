@@ -5,28 +5,32 @@ class DataUploadersController < ApplicationController
   def file_upload
     initalize_breadcrumb("File Upload", fileupload_datauploaders_path)
   end
+  
   def file_upload_to_amazon
     puts " submit request "
-      table_name= (current_user.id).to_s + DateTime.now.strftime('%Q').downcase.pluralize
-      uploaded_file_name = params[:file].original_filename  
-      #insert into a record user file mapping ....       
-      bucket = S3_BUCKET      
-      object = bucket.objects[table_name]         
-      #write file into S3     
-      begin
+    table_name= (current_user.id).to_s + DateTime.now.strftime('%Q').downcase.pluralize
+    uploaded_file_name = params[:file].original_filename  
+    #insert into a record user file mapping ....       
+    bucket = S3_BUCKET      
+    object = bucket.objects[table_name]
+    #write file into S3     
+    begin
       object.write(:file => params[:file]) 
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name,Constant.file_upload_status_constants[:file_successfully_uploaded])
-      rescue
+    rescue
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name,Constant.file_upload_status_constants[:file_not_uploaded])  
-      end
-       
-      # create a thread for process on file      
-      Thread.new do
-       process_on_file(object.read,table_name)   
-      end  
-           
-      redirect_to uploadedfile_datauploaders_path     
+    end       
+    # create a thread for process on file      
+    Thread.new do
+     process_on_file(object.read,table_name)   
+    end
+    
+    respond_to do |format|  
+      format.json { head :no_content } 
+    end            
+    #redirect_to uploadedfile_datauploaders_path     
   end 
+  
   def import
     if params[:file] then      
       uploaded_file_name = params[:file].original_filename      

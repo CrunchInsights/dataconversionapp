@@ -47,7 +47,7 @@
                     <% end %>
                 <% else %>
                     <%= (link_to "here", deleteuserfilemappingrecord_datauploaders_path({:table_name => (record.table_name)}), :method => :delete, :style => "display: none", :class => "include_in_message" )%>
-                    <button type="button" class="btn btn-sm btn-warning" onclick="show_message('There was an error in your previous upload. Please upload your file again and if you want to delete this entry from history please click ', 'error', this,true);">Schema</button>
+                    <button type="button" class="btn btn-sm btn-warning" onclick="show_message('There was an error in your previous upload. Please upload your file again and if you want to delete this entry from history please click ', 'error', this, true);">Schema</button>
                 <% end %>
               </div>
             </td>
