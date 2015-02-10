@@ -103,13 +103,7 @@ $(document).ready(function () {
       progress_bar.width(0);
     });
 
-    multiple_photos_form.on('fileuploadsubmit', function (e, data) {
-    	console.log("3");
-      data.formData = {'photo[author]': $('#photo_author').val()};
-    });
-
     multiple_photos_form.on('fileuploadprogressall', function (e, data) {
-    	console.log("4");
       bitrate.text((data.bitrate / 1024).toFixed(2) + 'Kb/s');
       var progress = parseInt(data.loaded / data.total * 100, 10);
       progress_bar.css('width', progress + '%').text(progress + '%');
