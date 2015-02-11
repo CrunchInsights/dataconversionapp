@@ -5,28 +5,32 @@ class DataUploadersController < ApplicationController
   def file_upload
     initalize_breadcrumb("File Upload", fileupload_datauploaders_path)
   end
+  
   def file_upload_to_amazon
     puts " submit request "
-      table_name= (current_user.id).to_s + DateTime.now.strftime('%Q').downcase.pluralize
-      uploaded_file_name = params[:file].original_filename  
-      #insert into a record user file mapping ....       
-      bucket = S3_BUCKET      
-      object = bucket.objects[table_name]         
-      #write file into S3     
-      begin
+    table_name= (current_user.id).to_s + DateTime.now.strftime('%Q').downcase.pluralize
+    uploaded_file_name = params[:file].original_filename  
+    #insert into a record user file mapping ....       
+    bucket = S3_BUCKET      
+    object = bucket.objects[table_name]
+    #write file into S3     
+    begin
       object.write(:file => params[:file]) 
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name,Constant.file_upload_status_constants[:file_successfully_uploaded])
-      rescue
+    rescue
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name,Constant.file_upload_status_constants[:file_not_uploaded])  
-      end
-       
-      # create a thread for process on file      
-      Thread.new do
-       process_on_file(object.read,table_name)   
-      end  
-           
-      redirect_to uploadedfile_datauploaders_path     
+    end       
+    # create a thread for process on file      
+    Thread.new do
+     process_on_file(object.read,table_name)   
+    end
+    
+    respond_to do |format|  
+      format.json { head :no_content } 
+    end            
+    #redirect_to uploadedfile_datauploaders_path     
   end 
+  
   def import
     if params[:file] then      
       uploaded_file_name = params[:file].original_filename      
@@ -564,17 +568,21 @@ class DataUploadersController < ApplicationController
       columns = []
       is_repeated_column = false
       error_record_list = []
-      error_row_num_list = [] 
+      error_row_num_list = []      
       # filter error records, check is file contain repated column     
-      CSV.parse(csvdatafile).each_with_index do |row, row_id|
-        if row_id  == 0 
+      CSV.parse(csvdatafile).each_with_index do |row, row_id| 
+        puts "row_id"
+        puts row_id     
+            
+        if row_id  == 0          
             columns = row.to_a
             if columns.uniq.size != columns.size 
               is_repeated_column = true
               break
             end
             max_row_size = columns.size
-        elsif max_row_size == row.to_a.size 
+        elsif max_row_size == row.to_a.size               
+              puts "Error"
               temp_row = row.to_a
               if DataUploader.contain_blank_value(temp_row) 
                 error_row_num_list.append(row_id)
@@ -582,7 +590,7 @@ class DataUploadersController < ApplicationController
               else
                 csv_data.append(row.to_a)
               end              
-         else
+         else 
           error_row_num_list.append(row_id)
           error_record_list.append({:row_id => row_id, :error => "Record cannot be inserted due to unmatched length with header", :error_record => row.to_a})
         end                  
@@ -874,13 +882,13 @@ class DataUploadersController < ApplicationController
           end
         rescue      
         end           
-        Thread.new do
+       
            DataUploader.insert_csv_data(csvdatafile, table_name, @columns_detail, error_row_num_list)
-        end
+        
         if error_record_list.size > 0 then
-          Thread.new do
+          
              DataUploader.insert_error_detail(table_name, error_record_list)
-          end
+          
         end
         #redirect_to showuploadedschema_datauploaders_path({:table_name => table_name}), notice: "Data Uploaded Successfully"
       else

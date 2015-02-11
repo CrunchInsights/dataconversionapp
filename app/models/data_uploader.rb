@@ -160,7 +160,7 @@ class DataUploader < ActiveRecord::Base
               inserted_row_arr.append(values)                                     
             end                        
             chunk=chunk + 1           
-            if chunk > 10000
+            if chunk > 100
               puts "ANder wala chunk"
               chunk=0
               my_sql="INSERT INTO \"#{table_name}\" (#{table_col_str}) Values "+inserted_row_arr.join(', ')
@@ -168,12 +168,9 @@ class DataUploader < ActiveRecord::Base
               result_set = ActiveRecord::Base.connection.execute(my_sql)
             end  
           end
-        end 
-        puts "*********************************************************"               
-        puts "row_id ="+row_id.to_s        
+        end             
       end 
       if chunk > 0
-          puts "Baher wala chunk"  
           chunk=0            
           my_sql="INSERT INTO \"#{table_name}\" (#{table_col_str}) Values "+inserted_row_arr.join(', ')
           inserted_row_arr=[]
