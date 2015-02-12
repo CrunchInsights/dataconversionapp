@@ -26,10 +26,6 @@ class DataUploadersController < ApplicationController
       end
     rescue Exception => err
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name, Constant.file_upload_status_constants[:file_not_uploaded])      
-      FileUploadErrorMessage.create(
-                            table_name: table_name,
-                            error_message: err.message.to_s)
-                      
       @json_res = {:is_error => true, :error_message => "Error in file <i>#{uploaded_file_name} </i>upload"}
       respond_to do |format|  
         format.json { render :json => [@json_res]}
@@ -599,9 +595,11 @@ class DataUploadersController < ApplicationController
       end 
       puts "################### CSV DATA IS READY ##########################"     
       @columns_detail = []
-      if is_repeated_column  then
-        puts "################### Column reapted ##########################" 
-        add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name,Constant.file_upload_status_constants[:file_successfully_uploaded])       
+      if is_repeated_column  then        
+        add_file_detail = UserFileMapping.update_uploaded_file_status(table_name, Constant.file_upload_status_constants[:file_uploaded_with_error])       
+        FileUploadErrorMessage.create(
+                            table_name: table_name,
+                            error_message: "Unable to analyze the CSV due to repeated columns")
       else        
       csv_data = csv_data.transpose
       columns.each_with_index do |column, colindex|
@@ -902,5 +900,17 @@ class DataUploadersController < ApplicationController
           end
         end
 	    end
+  end
+
+  def show_error_record
+    @result = []
+    table_name = params[:table_name]
+    @is_schema_error = params[:is_schema_error]
+    if @is_schema_error
+      @result = FileUploadErrorMessage.table_upload_error_record(table_name)
+    else
+      @result = TableErrorRecord.table_error_record(table_name)
+    end
+    respond_with(@result, @is_schema_error)
   end
 end

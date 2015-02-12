@@ -14,4 +14,10 @@ class UserFileMapping < ActiveRecord::Base
         modified_by: current_user.id,
         modified_on: Time.now)
   end
+
+  def self.update_uploaded_file_status(table_name, file_upload_status)
+    file_upload_record = UserFileMapping.find_by(:table_name=>table_name)
+    file_upload_record.file_upload_status = file_upload_status
+    file_upload_record.save
+  end
 end
