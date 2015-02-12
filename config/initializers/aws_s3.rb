@@ -1,3 +1,4 @@
+require 'aws-sdk'
 
 AWS.config(
             :access_key_id =>ENV['AWS_ACCESS_KEY_ID'],
