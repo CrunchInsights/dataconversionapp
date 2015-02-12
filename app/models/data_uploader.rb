@@ -83,7 +83,6 @@ class DataUploader < ActiveRecord::Base
   end
 
   def self.insert_csv_data(csv_file_data, table_name, column_structure_object, error_row_num_list)
-    puts ":::::::::::::::::: insert process start here ::::::::::::::::::::::::::::"   
     if column_structure_object.size > 0
       table_columns = []
       column_structure_object.each do |column_name|
