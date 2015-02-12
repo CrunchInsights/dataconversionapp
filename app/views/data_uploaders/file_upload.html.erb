@@ -3,16 +3,16 @@
 <h3>OR</h3>
 <%= form_tag fileuploadtoamazon_datauploaders_path, remote: true, multipart: true, id: 'uploadForm' do %>	
     <div class="row"><div class="col-sm-4"><span><label style="float: left; margin-right: 10px; padding-top: 3px;">Select CSV file: </label><%= file_field_tag :file %><span></div>
-    <!-- <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary" %></div> --></div>
-    <div class="progress-wrapper">
+    <!-- <div class="col-sm-6"><%= submit_tag "Upload CSV", class:"btn btn-sm btn-primary" %></div> -->
+    </div>    
+<% end %>
+<div class="progress-wrapper">
     <p>Bitrate: <span class="bitrate"></span></p>
     <div class="progress">
-      <div class="progress-bar" role="progressbar">
-        0%
+      <div class="progress-bar" role="progressbar"> 0%
       </div>
     </div>
-  </div>  
-<% end %>
+</div>  
 <div id="div_loading_window" class="modal fade in" style="width: 100% !Important; overflow-y: hidden; height: 100% !Important;">
   <%= image_tag("ajax-loader.gif", :class => "modal-dialog") %>
   <div class="modal-body">

@@ -74,46 +74,62 @@ $(window).on('popstate', function() {
 
 $(document).ready(function () {	
 	var csv_form = $('#uploadForm');
-    var wrapper = csv_form.find('.progress-wrapper');
-    wrapper.hide();
-    var bitrate = wrapper.find('.bitrate');
-    var progress_bar = wrapper.find('.progress-bar');
-
-    csv_form.fileupload({
-      	dataType: 'script',
-      	dropZone: $('#dropzone'),
-      	add: function (e, data) {
-       			types = /(\.|\/)(comma-separated-values|vnd.ms-excel|csv)$/i;
-        		file = data.files[0];
-        		if (types.test(file.type) || types.test(file.name)) {
-          			data.submit();
-        		}
-        		else { alert(file.name + " must be csv"); }
-      	}
-    });
-   
-    csv_form.on('fileuploadstart', function() {
-      	progress_bar.width(0);
-      	wrapper.show();
-    });
-
-    csv_form.on('fileuploaddone', function() {    	
-      	wrapper.hide();
-      	progress_bar.width(0);
-    });
-
-    csv_form.on('fileuploadprogressall', function (e, data) {
-      bitrate.text((data.bitrate / 1024).toFixed(2) + 'Kb/s');
-      var progress = parseInt(data.loaded / data.total * 100, 10);
-      progress_bar.css('width', progress + '%').text(progress + '%');
-      if(progress == "100"){
-      		var message = 'File is successfully uploaded. Click <a href="/datauploaders/uploadedfile">here</a> to view all uploaded files.';
-			var div="<div class='alert alert-success'>" +
-	            "<button type='button' class='close' data-dismiss='alert'>" +
-	            "&times;</button>" +message+"</div>";
-            $('div.container div#custom_message').append(div); 
+  var wrapper = $('.progress-wrapper');
+  wrapper.hide();
+  var bitrate = wrapper.find('.bitrate');
+  var progress_bar = wrapper.find('.progress-bar');
+  $(document).ajaxSuccess( function(event, xhr, settings) {
+      var result=JSON.parse(xhr.responseText);
+      if (result[0].is_error) {
+          var div="<div class='alert alert-danger'>" +
+              "<button type='button' class='close' data-dismiss='alert'>" +
+              "&times;</button>" +result[0].error_message+"</div>";
+          $('div.container div#custom_message').append(div);
+          wrapper.hide();
       }
-    });
+      else {
+          var message = 'File is successfully uploaded. Click <a href="/datauploaders/uploadedfile">here</a> to view all uploaded files.';
+          var div="<div class='alert alert-success'>" +
+              "<button type='button' class='close' data-dismiss='alert'>" +
+              "&times;</button>" +message+"</div>";
+          $('div.container div#custom_message').append(div);
+          wrapper.show();
+      }   
+  }); 
+  $(document).ajaxError( function(event, xhr, settings,thrownError) {
+    var div="<div class='alert alert-danger'>" +
+              "<button type='button' class='close' data-dismiss='alert'>" +
+              "&times;</button>" +thrownError+"</div>";
+          $('div.container div#custom_message').append(div);
+  });
+
+  csv_form.fileupload({
+    	dataType: 'script',
+    	dropZone: $('#dropzone'),
+    	add: function (e, data) {
+     			types = /(\.|\/)(comma-separated-values|vnd.ms-excel|csv)$/i;
+      		file = data.files[0];
+      		if (types.test(file.type) || types.test(file.name)) {
+        			data.submit();
+      		}
+      		else { alert(file.name + " must be csv"); }
+    	}
+  });
+ 
+  csv_form.on('fileuploadstart', function() {
+    	progress_bar.width(0);
+    	wrapper.show();
+  });
+
+  csv_form.on('fileuploaddone', function() {
+      progress_bar.css('width', '100%').text('File uploaded successfully');
+  });
+
+  csv_form.on('fileuploadprogressall', function (e, data) {
+    bitrate.text((data.bitrate / 1024).toFixed(2) + 'Kb/s');
+    var progress = parseInt(data.loaded / data.total * 100, 10);
+    progress_bar.css('width', progress + '%').text(progress + '%');     
+  });
 	
 	
 	

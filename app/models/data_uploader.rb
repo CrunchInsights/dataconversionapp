@@ -104,7 +104,6 @@ class DataUploader < ActiveRecord::Base
                       inserted_row_string = inserted_row_string + 'NULL, '
                     else
                       if column_structure_object[col_index][:data_type] == "datetime" then
-                        byebug
                         if column_structure_object[col_index][:date_format] != "" then
                           if column_structure_object[col_index][:time_format] != "" then
                             inserted_row_string = inserted_row_string + "'" + DateTime.strptime(inserted_row_value.strip, "#{column_structure_object[col_index][:date_format]} #{column_structure_object[col_index][:time_format]}").strftime("%Y-%m-%d %H:%M:%S").to_s + "', "

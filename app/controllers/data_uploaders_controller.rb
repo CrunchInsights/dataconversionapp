@@ -20,8 +20,9 @@ class DataUploadersController < ApplicationController
       Thread.new do
        process_on_file(object.read,table_name)   
       end         
+      @json_res = {:is_error => false, :error_message => ""}
       respond_to do |format|  
-        format.json { head :no_content } 
+        format.json { render :json => [@json_res]}
       end
     rescue Exception => err
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name, Constant.file_upload_status_constants[:file_not_uploaded])      
@@ -29,7 +30,10 @@ class DataUploadersController < ApplicationController
                             table_name: table_name,
                             error_message: err.message.to_s)
                       
-      redirect_to fileupload_datauploaders_path, :flash => { :error => "Error: #{err.message.to_s}" }  
+      @json_res = {:is_error => true, :error_message => "Error in file <i>#{uploaded_file_name} </i>upload"}
+      respond_to do |format|  
+        format.json { render :json => [@json_res]}
+      end
     end           
   end 
   
@@ -746,7 +750,6 @@ class DataUploadersController < ApplicationController
               begin
                 is_data_integer=csv_data[colindex].collect{|val| Integer(val)}
                 column_detail[:data_type] = "integer"
-                byebug                
                 temp_arr = csv_data[colindex].collect{|val| Integer(val) == 0 ? "0" : val }
                 temp_arr.delete("0")
                 is_string = false

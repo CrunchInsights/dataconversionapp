@@ -1,6 +1,6 @@
 default: &default
   adapter: postgresql
-  pool: 5
+  pool: 30
   timeout: 5000  
   
 development:
@@ -9,7 +9,7 @@ development:
   encoding: utf8
   reconnect: false
   database: dataconversion_development
-  pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 5 %>
+  pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 30 %>
   username: postgres
   password: root
   host: localhost
@@ -23,7 +23,7 @@ test:
   encoding: utf8
   reconnect: false
   database: dataconversion_test
-  pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 5 %>
+  pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 30 %>
   username: postgres
   password: root
   host: localhost
@@ -34,7 +34,7 @@ production:
   encoding: utf8
   reconnect: false
   database: dataconversion_production
-  pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 5 %>
+  pool: <%= ENV["DB_POOL"] || ENV['MAX_THREADS'] || 30 %>
   username: postgres
   password: root
   host: localhost
