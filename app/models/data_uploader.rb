@@ -1,3 +1,5 @@
+require 'smarter_csv'
+require 'open-uri'
 class DataUploader < ActiveRecord::Base
   def self.create_dynamic_table(table_name, column_structure_object)
     begin

@@ -81,21 +81,23 @@ $(document).ready(function () {
   $(document).ajaxSuccess( function(event, xhr, settings) {
   	  $('div.container div#custom_message').empty();
       var result=JSON.parse(xhr.responseText);
-      if (result[0].is_error) {
-          var div="<div class='alert alert-danger'>" +
+      if ((result[0]) && ("is_error" in result[0])){
+      	if (result[0].is_error) {
+          	var div="<div class='alert alert-danger'>" +
               "<button type='button' class='close' data-dismiss='alert'>" +
               "&times;</button>" +result[0].error_message+"</div>";
-          $('div.container div#custom_message').append(div);
-          wrapper.hide();
-      }
-      else {
-          var message = 'File is successfully uploaded. Click <a href="/datauploaders/uploadedfile">here</a> to view all uploaded files.';
-          var div="<div class='alert alert-success'>" +
-              "<button type='button' class='close' data-dismiss='alert'>" +
-              "&times;</button>" +message+"</div>";
-          $('div.container div#custom_message').append(div);
-          wrapper.show();
-      }   
+          	$('div.container div#custom_message').append(div);
+          	wrapper.hide();
+      	}
+      	else {
+        	var message = 'File is successfully uploaded. Click <a href="/datauploaders/uploadedfile">here</a> to view all uploaded files.';
+          	var div="<div class='alert alert-success'>" +
+             	 "<button type='button' class='close' data-dismiss='alert'>" +
+              	"&times;</button>" +message+"</div>";
+          	$('div.container div#custom_message').append(div);
+          	wrapper.show();
+      	}
+      }        
   });
    
   $(document).ajaxError( function(event, xhr, settings,thrownError) {
