@@ -35,9 +35,9 @@ function edit_button_click(view){
     (tr.find('td[is_button_column="yes"]')).find('a[button_type = "save"]').show();
 }
 
-/*function show_loading_window() {
+function show_loading_window() {
     $("#div_loading_window").modal('show');
-}*/
+}
 
 function show_message(message, message_type, obj,is_use_clone){
     var hyper_link_exist =$(obj).parent().find('a').length;
