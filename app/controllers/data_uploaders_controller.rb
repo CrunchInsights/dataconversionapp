@@ -563,8 +563,7 @@ class DataUploadersController < ApplicationController
     end
   end
 
-  def process_on_file(csvdatafile,table_name)
-      puts "################### Into processing file ##########################"      
+  def process_on_file(csvdatafile,table_name)   
       csv_data = []       
       max_row_size = 0            
       columns = []
@@ -903,14 +902,16 @@ class DataUploadersController < ApplicationController
   end
 
   def show_error_record
+    initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)    
     @result = []
     table_name = params[:table_name]
     @is_schema_error = params[:is_schema_error]
-    if @is_schema_error
+    if @is_schema_error == "true" then      
       @result = FileUploadErrorMessage.table_upload_error_record(table_name)
     else
       @result = TableErrorRecord.table_error_record(table_name)
-    end
+    end    
+    initalize_breadcrumb("Error Record(s)", showerrorrecord_datauploaders_path)
     respond_with(@result, @is_schema_error)
   end
 end

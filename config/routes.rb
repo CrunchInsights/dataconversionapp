@@ -15,6 +15,7 @@ Rails.application.routes.draw do
       delete :columnexcludeinclude, :action=>'column_exclude_include'
       delete :deleteuserfilemappingrecord, :action=>'delete_user_file_mapping_record'
       post :uploadfilecolumnsforrecord, :action=>'upload_file_columns_for_record'
+      get :showerrorrecord, :action => 'show_error_record'
     end
   end
 

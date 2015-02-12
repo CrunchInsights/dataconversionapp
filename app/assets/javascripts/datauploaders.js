@@ -73,12 +73,13 @@ $(window).on('popstate', function() {
 });
 
 $(document).ready(function () {	
-	var csv_form = $('#uploadForm');
+  var csv_form = $('#uploadForm');
   var wrapper = $('.progress-wrapper');
   wrapper.hide();
   var bitrate = wrapper.find('.bitrate');
   var progress_bar = wrapper.find('.progress-bar');
   $(document).ajaxSuccess( function(event, xhr, settings) {
+  	  $('div.container div#custom_message').empty();
       var result=JSON.parse(xhr.responseText);
       if (result[0].is_error) {
           var div="<div class='alert alert-danger'>" +
@@ -95,12 +96,14 @@ $(document).ready(function () {
           $('div.container div#custom_message').append(div);
           wrapper.show();
       }   
-  }); 
+  });
+   
   $(document).ajaxError( function(event, xhr, settings,thrownError) {
-    var div="<div class='alert alert-danger'>" +
+  	    $('div.container div#custom_message').empty();
+    	var div="<div class='alert alert-danger'>" +
               "<button type='button' class='close' data-dismiss='alert'>" +
               "&times;</button>" +thrownError+"</div>";
-          $('div.container div#custom_message').append(div);
+  		$('div.container div#custom_message').append(div);
   });
 
   csv_form.fileupload({
@@ -122,18 +125,16 @@ $(document).ready(function () {
   });
 
   csv_form.on('fileuploaddone', function() {
-      progress_bar.css('width', '100%').text('File uploaded successfully');
+      	progress_bar.css('width', '100%').text('File uploaded successfully');
   });
 
   csv_form.on('fileuploadprogressall', function (e, data) {
-    bitrate.text((data.bitrate / 1024).toFixed(2) + 'Kb/s');
-    var progress = parseInt(data.loaded / data.total * 100, 10);
-    progress_bar.css('width', progress + '%').text(progress + '%');     
+    	bitrate.text((data.bitrate / 1024).toFixed(2) + 'Kb/s');
+    	var progress = parseInt(data.loaded / data.total * 100, 10);
+    	progress_bar.css('width', progress + '%').text(progress + '%');     
   });
 	
-	
-	
-	$(document).bind('dragover', function (e) {
+  $(document).bind('dragover', function (e) {
       var dropZone = $('#dropzone'),
       timeout = window.dropZoneTimeout;
       if (!timeout) {
