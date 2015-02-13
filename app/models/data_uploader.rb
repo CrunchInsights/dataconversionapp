@@ -160,7 +160,7 @@ class DataUploader < ActiveRecord::Base
                 inserted_row_arr.append(values)                                     
               end                        
               chunk=chunk + 1           
-              if chunk >= 1
+              if chunk > 50
                 puts "ANder wala chunk"
                 chunk=0
                 my_sql="INSERT INTO \"#{table_name}\" (#{table_col_str}) Values "+inserted_row_arr.join(', ')
