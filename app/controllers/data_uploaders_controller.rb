@@ -885,7 +885,7 @@ class DataUploadersController < ApplicationController
               user_table_mapping.save
             end
           rescue      
-          end    
+          end             
           DataUploader.insert_csv_data(csvdatafile, table_name, @columns_detail, error_row_num_list)
           if error_record_list.size > 0 then
             DataUploader.insert_error_detail(table_name, error_record_list)
@@ -913,5 +913,26 @@ class DataUploadersController < ApplicationController
     end    
     initalize_breadcrumb("Error Record(s)", showerrorrecord_datauploaders_path)
     respond_with(@result, @is_schema_error)
+  end
+  
+  def restart_insertion
+    table_name = params[:table_name]        
+    response = DataUploader.check_table_exist(table_name)
+    if response.to_a.size > 0 then      
+      user_table_mapping = UserFileMapping.where(:table_name => table_name.to_s).first
+      initial_user_file_name = user_table_mapping[:file_name]
+      DataUploader.drop_table_if_exist(table_name)
+      user_table_mapping.destroy
+      #insert into a record user file mapping ....       
+      bucket = S3_BUCKET      
+      object = bucket.objects[table_name]
+      #write file into S3
+      add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, initial_user_file_name, table_name, Constant.file_upload_status_constants[:file_successfully_uploaded])
+      # create a thread for process on file      
+      Thread.new do
+       process_on_file(object.read,table_name)   
+      end
+    end
+    redirect_to uploadedfile_datauploaders_path, :flash => { :notice => "Data processing restarted." }
   end
 end

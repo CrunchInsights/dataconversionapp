@@ -51,9 +51,16 @@
 							  </button>
 							  <ul class="dropdown-menu" role="menu">
 						    	<li>
-						    		<a type="button" class="link" onclick="show_message('Data upload is still in progress. Please refresh the page for latest status', 'info', this, false);"> 
-			                        	Show Records</span> 
-			                       </a>
+						    		<% if record.file_upload_status != Constant.file_upload_status_constants[:file_record_insert_error] then %>
+							    		<a type="button" class="link" onclick="show_message('Data upload is still in progress. Please refresh the page for latest status', 'info', this, false);"> 
+				                        	Show Records</span> 
+				                        </a>
+				                    <% else %>
+				                    	<%= (link_to "here", restartinsertion_datauploaders_path({:table_name => (record.table_name)}), :style => "display: none", :class => "include_in_message" )%>
+				                    	<a type="button" class="link" onclick="show_message('There was an error in your previous data upload. In order to process it again, click ', 'error', this, true);"> 
+				                        	Show Records</span> 
+				                        </a>
+				                    <% end %>
 						    	</li>					    
 						  	  </ul>
 							</div>	                       	

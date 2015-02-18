@@ -1,27 +1,3 @@
-//use for file upload action , only allow csv format
-$('#file').change(function(){
-    //debugger;
-	var fileType = 'comma-separated-values,vnd.ms-excel,csv';
-	var isCorrectType = false;
-    var chosen = this.files[0];
-    
-	if ( fileType!=""){
-        var type = (chosen.type).split("/")[1];
-        fileTypeArr = fileType.split(",");
-        var i=0;
-        for(i=0; i<fileTypeArr.length;i++){
-            if (type == fileTypeArr[i]){
-                isCorrectType = true;
-                break;
-            }
-        }
-        if(!isCorrectType){
-            alertify.alert("File format supported is only csv");
-            $('#file').val("");
-        }
-    }
-});
-
 $(function(){
     $('.custom_table').dataTable();   
 });
@@ -112,12 +88,16 @@ $(document).ready(function () {
     	dataType: 'script',
     	dropZone: $('#dropzone'),
     	add: function (e, data) {
-     			types = /(\.|\/)(comma-separated-values|vnd.ms-excel|csv)$/i;
-      		file = data.files[0];
-      		if (types.test(file.type) || types.test(file.name)) {
-        			data.submit();
-      		}
-      		else { alert(file.name + " must be csv"); }
+	     	types = /(\.|\/)(comma-separated-values|vnd.ms-excel|csv)$/i;
+	  		file = data.files[0];
+	  		if (types.test(file.type) || types.test(file.name)) {
+	    		data.submit();
+	  		}
+	  		else { 
+	  			//alert(file.name + " must1 be csv");
+	  			alertify.alert("File format supported is only csv");
+            	$('#file').val(""); 
+	  		}
     	}
   });
  
