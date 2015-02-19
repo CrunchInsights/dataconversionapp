@@ -33,25 +33,26 @@
                         </li>
                       <% end %>					    						    
                     </ul>
+                    <%= link_to "Remove", deletecompletedatasource_datauploaders_path({:table_name => (record.table_name)}), method: :delete,:type=>"button", :class=>"btn btn-sm btn-danger"%>
                   </div>                        
                 <% else %>
                 	<div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-list" aria-hidden="true"></button>
-                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle " data-toggle="dropdown" aria-expanded="false">
-                      <span class="caret"></span>
-                      <span class="sr-only">Toggle Dropdown</span>
-                    </button>
-                    <ul class="dropdown-menu" role="menu">
-                    	<li>
-                    		<% if record.file_upload_status != Constant.file_upload_status_constants[:file_record_insert_error] then %>
-                          <a type="button" class="link" onclick="show_message('Data upload is still in progress. Please refresh the page for latest status', 'info', this, false);">Show Records</a>
-                        <% else %>
-                        	<%= (link_to "here", restartinsertion_datauploaders_path({:table_name => (record.table_name)}), :style => "display: none", :class => "include_in_message" )%>
-                        	<a type="button" class="link" onclick="show_message('There was an error in your previous data upload. In order to process it again, click ', 'error', this, true);">Show Records</a>
-                        <% end %>
-                    	</li>					    
-                    </ul>
-  				        </div>	                       	
+	                    <button type="button" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-list" aria-hidden="true"></button>
+	                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle " data-toggle="dropdown" aria-expanded="false">
+	                      <span class="caret"></span>
+	                      <span class="sr-only">Toggle Dropdown</span>
+	                    </button>
+	                    <ul class="dropdown-menu" role="menu">
+	                    	<li>
+	                    		<% if record.file_upload_status != Constant.file_upload_status_constants[:file_record_insert_error] then %>
+	                          <a type="button" class="link" onclick="show_message('Data upload is still in progress. Please refresh the page for latest status', 'info', this, false);">Show Records</a>
+	                        <% else %>
+	                        	<%= (link_to "here", restartinsertion_datauploaders_path({:table_name => (record.table_name)}), :style => "display: none", :class => "include_in_message" )%>
+	                        	<a type="button" class="link" onclick="show_message('There was an error in your previous data upload. In order to process it again, click ', 'error', this, true);">Show Records</a>
+	                        <% end %>
+	                    	</li>					    
+	                    </ul>
+  				    </div>	                       	
                 <% end %>
               <% else %>
               	<% if record.file_upload_status == Constant.file_upload_status_constants[:file_successfully_uploaded] then %>
@@ -63,8 +64,7 @@
               		<%= (link_to "here", deleteuserfilemappingrecord_datauploaders_path({:table_name => (record.table_name)}), :method => :delete, :style => "display: none", :class => "include_in_message" )%>
                 		<button type="button" class="btn btn-sm btn-warning" onclick="show_message('There was an error in your previous upload. Please upload your file again and if you want to delete this entry from history please click ', 'error', this, true);">Schema</button>
               	<% end %>  
-              <% end %>
-              <%= link_to "Remove", deletecompletedatasource_datauploaders_path({:table_name => (record.table_name)}), method: :delete,:type=>"button", :class=>"btn btn-sm btn-danger"%>
+              <% end %>              
           	</div>
           </td>
         </tr>
