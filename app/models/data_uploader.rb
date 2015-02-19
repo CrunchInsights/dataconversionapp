@@ -317,4 +317,41 @@ class DataUploader < ActiveRecord::Base
       return false
     end
   end
+
+  def self.delete_existing_data_source(table_name)
+    is_process_complete = true
+    ActiveRecord::Base.transaction do
+      begin
+        # 1.remove from user_file_mapping
+        user_file_mapping_result = UserFileMapping.find_by(:table_name=>table_name.to_s)
+        user_file_mapping_result.destroy
+
+        #2. remove from table_error_records
+        table_error_records_result = TableErrorRecord.where(:table_name => table_name.to_s)
+        table_error_records_result.each do |result|
+          result.destroy
+        end
+
+        #3. remove from user_table_column_informations
+        user_table_column_informations_result = UserTableColumnInformation.where(:table_name => table_name.to_s)
+        user_table_column_informations_result.each do |result|
+          result.destroy
+        end
+        #4. remove from file_upload_error_messages
+        file_upload_error_messages_result = FileUploadErrorMessage.where(:table_name => table_name.to_s)
+        file_upload_error_messages_result.each do |result|
+          result.destroy
+        end
+        #5. remove file from AWS s3
+        #insert into a record user file mapping ....       
+        bucket = S3_BUCKET      
+        object = bucket.objects[table_name]
+        object.delete
+      rescue Exception => e
+        is_process_complete = false
+        raise ActiveRecord::Rollback
+      end
+    end
+    return is_process_complete
+  end
 end

@@ -17,6 +17,8 @@ Rails.application.routes.draw do
       post :uploadfilecolumnsforrecord, :action=>'upload_file_columns_for_record'
       get :showerrorrecord, :action => 'show_error_record'
       get :restartinsertion, :action => 'restart_insertion'
+      get :checkfileuploaded, :action => 'check_file_uploaded'
+      delete :deletecompletedatasource, :action => 'delete_complete_data_source'
     end
   end
 

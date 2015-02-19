@@ -19,6 +19,5 @@
 //= require jquery.dataTables
 //= require dataTable.bootstrap
 //= require migrate
-
 //= require jquery.remotipart
 //= require jquery-fileupload/basic

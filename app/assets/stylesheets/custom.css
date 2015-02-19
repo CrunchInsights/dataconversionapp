@@ -92,7 +92,7 @@ thead th {
     padding: 8px;
 }*/
 
-.modal-dialog{
+/*.modal-dialog{
     margin: auto  !important;
     left: 45%  !important;
     top: 45%  !important;
@@ -106,7 +106,7 @@ thead th {
     left: 35% !important;
     top: 45% !important;
     width: auto !important;
-}
+}*/
 
 .progress-wrapper {
   display: none;
@@ -140,4 +140,126 @@ thead th {
   transition-duration: 0.5s;
   transition-property: all;
   transition-timing-function: ease-out;
+}
+
+.modal-open {
+    overflow: hidden;
+}
+
+.modal {
+    bottom: 0;
+    display: none;
+    left: 0;
+    overflow-x: auto;
+    overflow-y: auto;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1040;
+}
+
+.modal.fade .modal-dialog {
+    transform: translate(0px, -25%);
+    transition: transform 0.3s ease-out 0s;
+}
+
+.modal.in .modal-dialog {
+    transform: translate(0px, 0px);
+}
+
+.modal-dialog {
+    margin-left: auto;
+    margin-right: auto;
+    padding: 10px;
+    position: relative;
+    width: auto;
+    z-index: 1050;
+}
+
+.modal-content {
+    background-clip: padding-box;
+    background-color: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 6px;
+    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.5);
+    outline: medium none;
+    position: relative;
+}
+
+.modal-backdrop {
+    background-color: #000000;
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    z-index: 1030;
+}
+
+.modal-backdrop.fade {
+    opacity: 0;
+}
+
+.modal-backdrop.in {
+    opacity: 0.5;
+}
+
+.modal-header {
+    border-bottom: 1px solid #E5E5E5;
+    min-height: 16.2px;
+    padding: 15px;
+}
+
+.modal-header .close {
+   margin-top: -2px;
+}
+
+.modal-title {
+    line-height: 1.2;
+    margin: 0;
+}
+
+.modal-body {
+    padding: 20px;
+    position: relative;
+}
+
+.modal-footer {
+    border-top: 1px solid #E5E5E5;
+    margin-top: 15px;
+    padding: 19px 20px 20px;
+    text-align: right;
+}
+
+.modal-footer:before, .modal-footer:after {
+    content: " ";
+    display: table;
+}
+
+.modal-footer:after {
+    clear: both;
+}
+
+.modal-footer .btn + .btn {
+    margin-bottom: 0;
+    margin-left: 5px;
+}
+
+.modal-footer .btn-group .btn + .btn {
+    margin-left: -1px;
+}
+
+.modal-footer .btn-block + .btn-block {
+    margin-left: 0;
+}
+
+@media screen and (min-width: 768px) {
+    .modal-dialog {
+        padding-bottom: 30px;
+        padding-top: 30px;
+        width: 600px;
+    }
+    .modal-content {
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    }
 }

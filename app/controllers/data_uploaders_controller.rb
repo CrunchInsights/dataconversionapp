@@ -7,6 +7,9 @@ class DataUploadersController < ApplicationController
   end
   
   def file_upload_to_amazon
+    selected_file_name = params[:selected_file_name]
+    puts "*************************************"
+    puts selected_file_name    
     table_name= (current_user.id).to_s + DateTime.now.strftime('%Q').downcase.pluralize
     uploaded_file_name = params[:file].original_filename  
     #insert into a record user file mapping ....       
@@ -14,6 +17,9 @@ class DataUploadersController < ApplicationController
     object = bucket.objects[table_name]
     #write file into S3
     begin
+      if selected_file_name != '' then
+        is_process_complete = DataUploader.delete_existing_data_source(selected_file_name)
+      end
       object.write(:file => params[:file]) 
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name, Constant.file_upload_status_constants[:file_successfully_uploaded])
       # create a thread for process on file      
@@ -934,5 +940,25 @@ class DataUploadersController < ApplicationController
       end
     end
     redirect_to uploadedfile_datauploaders_path, :flash => { :notice => "Data processing restarted." }
+  end
+
+  def check_file_uploaded
+    file_name = params[:file_name]        
+    response = UserFileMapping.where(:file_name => file_name.to_s)
+    return_result = {:is_file_exits => false, :matching_record => []}
+    if response.to_a.size > 0 then
+      return_result[:is_file_exits] = true
+      return_result[:matching_record] = response.to_a
+    end
+    respond_to do |format|  
+        format.json { render :json => [return_result]}
+    end
+  end
+
+  def delete_complete_data_source
+    table_name = params[:table_name] 
+    is_process_complete = DataUploader.delete_existing_data_source(table_name)
+    result_obj = is_process_complete ? {:notice =>"Data source remove successfully." } :{:error =>"Error in removing data source. Please try again or contact admin." }
+    redirect_to uploadedfile_datauploaders_path, :flash => result_obj
   end
 end
