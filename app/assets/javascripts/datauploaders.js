@@ -91,52 +91,54 @@ $(document).ready(function () {
 	     	types = /(\.|\/)(comma-separated-values|vnd.ms-excel|csv)$/i;
 	  		file = data.files[0];
 	  		if (types.test(file.type) || types.test(file.name)) {
-          $.ajax({
-            type: 'GET',
-            url: '/datauploaders/checkfileuploaded',
-            data: { file_name: file.name },
-            success: function(result) {
-                if(result[0].is_file_exits){
-                  selected_file = '';  
-                  alertify.set({ labels: {
-                    ok     : "Overide!!!",
-                    cancel : "Create New!!!"
-                  }, buttonReverse: true, buttonFocus: "cancel" });
-                  // button labels will be "Accept" and "Deny"
-                  alertify.confirm("CSV with same file name already exist. Do you want to overide the existing or upload a new file with the same name.", function (e, str) {
-                    if (e) {
-                        var body_str = $('table#uploadedSchema tbody');
-                        body_str.empty();
-                        for(var i=0; i<(result[0].matching_record).length; i++){
-                          var row_data = (result[0].matching_record)[i];          
-                          body_str.append('<tr><td>'+ row_data.file_name + '</td><td>'+ row_data.table_name + '</td><td>'
-                            + row_data.created_on + '</td><td><button type="button" class="btn-link selected-file" value="'+ row_data.table_name +'" onclick="get">Select</button></td></tr>');
-                        }
-                        
-                        $('button.selected-file').on('click', function(){
-                          $('#uploadForm input[name="selected_file_name"]').remove();
-                          $('#possibleMatch-model-popup').modal('hide'); 
-                          var input = $("<input>").attr("type", "hidden").attr("name", "selected_file_name").val(this.value);
-                          $('#uploadForm').append($(input));
-                          data.submit(); 
-                        });
-
-                        $('#possibleMatch-model-popup').modal('show');        
-                        alertify.error("You chose to overwrite the existing file");
-                    } else {
-                        $('#uploadForm input[name="selected_file_name"]').remove();
-                        $('#possibleMatch-model-popup').modal('hide');                
-                        alertify.success("You chose to upload a new file with the same name");
-                        data.submit(); 
-                    }                  
-                  });
-                }
-            }
-          }); 		
+		          $.ajax({
+		            type: 'GET',
+		            url: '/datauploaders/checkfileuploaded',
+		            data: { file_name: file.name },
+		            success: function(result) {
+		                if(result[0].is_file_exits){
+		                  selected_file = '';  
+		                  alertify.set({ labels: {
+		                    ok     : "Overide!!!",
+		                    cancel : "Create New!!!"
+		                  }, buttonReverse: true, buttonFocus: "cancel" });
+		                  // button labels will be "Accept" and "Deny"
+		                  alertify.confirm("CSV with same file name already exist. Do you want to overide the existing or upload a new file with the same name.", function (e, str) {
+		                    if (e) {
+		                        var body_str = $('table#uploadedSchema tbody');
+		                        body_str.empty();
+		                        for(var i=0; i<(result[0].matching_record).length; i++){
+		                          var row_data = (result[0].matching_record)[i];          
+		                          body_str.append('<tr><td>'+ row_data.file_name + '</td><td>'+ row_data.table_name + '</td><td>'
+		                            + row_data.created_on + '</td><td><button type="button" class="btn-link selected-file" value="'+ row_data.table_name +'" onclick="get">Select</button></td></tr>');
+		                        }
+		                        
+		                        $('button.selected-file').on('click', function(){
+		                          $('#uploadForm input[name="selected_file_name"]').remove();
+		                          $('#possibleMatch-model-popup').modal('hide'); 
+		                          var input = $("<input>").attr("type", "hidden").attr("name", "selected_file_name").val(this.value);
+		                          $('#uploadForm').append($(input));
+		                          data.submit(); 
+		                        });
+		
+		                        $('#possibleMatch-model-popup').modal('show');        
+		                        alertify.error("You chose to overwrite the existing file");
+		                    } else {
+		                        $('#uploadForm input[name="selected_file_name"]').remove();
+		                        $('#possibleMatch-model-popup').modal('hide');                
+		                        alertify.success("You chose to upload a new file with the same name");
+		                        data.submit(); 
+		                    }                  
+		                  });
+		                }else{
+							data.submit();
+						}
+		            }
+		          }); 		
 	  		}
 	  		else {
 	  			alertify.alert("File format supported is only csv");
-          $('#file').val(""); 
+          		$('#file').val(""); 
 	  		}
     	}
   });
