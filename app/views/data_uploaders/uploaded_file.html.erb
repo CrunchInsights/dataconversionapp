@@ -32,9 +32,9 @@
                         <li><%= link_to "Show Error", showerrorrecord_datauploaders_path({:table_name => (record.table_name), :is_schema_error => false}), :type=>"button", :class=>"link" %>
                         </li>
                       <% end %>					    						    
-                    </ul>
-                    <%= link_to "Remove", deletecompletedatasource_datauploaders_path({:table_name => (record.table_name)}), method: :delete,:type=>"button", :class=>"btn btn-sm btn-danger"%>
-                  </div>                        
+                    </ul>                    
+                  </div>
+                  <%= link_to "Remove", deletecompletedatasource_datauploaders_path({:table_name => (record.table_name)}), method: :delete,:type=>"button", :class=>"btn btn-sm btn-danger"%>                       
                 <% else %>
                 	<div class="btn-group">
 	                    <button type="button" class="btn btn-sm btn-primary"><span class="glyphicon glyphicon-list" aria-hidden="true"></button>
