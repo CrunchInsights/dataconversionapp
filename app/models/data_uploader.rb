@@ -88,14 +88,16 @@ class DataUploader < ActiveRecord::Base
       column_structure_object.each do |column_name|
         table_columns.append(column_name[:column_name])
       end
-      table_col_str = table_columns.map{|col| "\"#{col}\""}.join(', ') 
-      puts error_row_num_list
+      table_col_str = table_columns.map{|col| "\"#{col}\""}.join(', ')
+      total_record = 0
+      error_record_count = 0
+      success_record = 0
       chunk = 0
       inserted_row_arr=[]
       record_inserted_successfully = true
       ActiveRecord::Base.transaction do
         begin
-          CSV.parse(csv_file_data).each_with_index do |row, row_id|        
+          CSV.parse(csv_file_data).each_with_index do |row, row_id|             
             if row_id > 0
               if !(error_row_num_list.include? row_id) then
                 inserted_row_string=''
@@ -169,20 +171,29 @@ class DataUploader < ActiveRecord::Base
                   inserted_row_arr=[]
                   result_set = ActiveRecord::Base.connection.execute(my_sql)
                 end
-              end
-            end             
-          end 
+              end              
+            end
+            total_record = row_id
+          end          
           if chunk > 0
               chunk=0            
               my_sql="INSERT INTO \"#{table_name}\" (#{table_col_str}) Values "+inserted_row_arr.join(', ')
               inserted_row_arr=[]
               result_set = ActiveRecord::Base.connection.execute(my_sql)
-          end          
+          end
+          error_record_count = error_row_num_list.size          
+          total_record = total_record
+          success_record = total_record - error_record_count
           user_table_mapping = UserFileMapping.where(:table_name => table_name.to_s).first
           if user_table_mapping then
             user_table_mapping.is_record_uploaded = true
+            if success_record >= 0 then
+              user_table_mapping.total_records = total_record
+              user_table_mapping.success_records = success_record
+              user_table_mapping.error_records = error_record_count
+            end
             user_table_mapping.save
-          end
+          end          
         rescue
           record_inserted_successfully = false
           raise ActiveRecord::Rollback

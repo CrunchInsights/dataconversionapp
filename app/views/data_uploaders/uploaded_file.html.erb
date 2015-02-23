@@ -3,9 +3,10 @@
   <thead>
     <tr>
       <th style="width: 250px">Upload File</th>
-      <th style="width: 250px">Data Source</th>
-      <th style="width: 250px">Upload Date</th>
-      <th style="width: 175px">Action</th>
+      <th style="width: 200px">Data Source</th>
+      <th style="width: 150px">Upload Date</th>
+      <th style="width: 250px">Upload Summary </th>
+      <th>Action</th>
     </tr>
   </thead>
   <tbody>
@@ -16,6 +17,13 @@
           <td><%= record.table_name %></td>
           <td><%= (record.created_on).strftime("%m/%d/%Y") %></td>
           <td>
+            <ul style="margin: 0; padding: 0 0 0 15px;">
+              <li>Total Records: <%= record.total_records %></li>
+              <li>Successfully Processed: <%= record.success_records %></li>
+              <li>Error Records: <%= record.error_records %></li>
+            </ul>
+          </td>
+          <td style="text-align: center;">
           	<div>
             	<% if record.is_table_created then %>
                 <%= link_to "Schema", showuploadedschema_datauploaders_path({:table_name => (record.table_name)}), :type=>"button", :class=>"btn btn-sm btn-warning"%>

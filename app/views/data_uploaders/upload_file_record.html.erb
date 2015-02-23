@@ -1,4 +1,25 @@
-<h2>File Records</h2>
+<h2>File Records</h2>	
+<% if @summary[:total_record] >= 0 then %>
+	<% if @summary[:success_record] == 0 then %>
+		<div class="alert alert-warning">
+			<button data-dismiss="alert" class="close" type="button">×</button>
+			<p><strong>Summary: </strong>All records in the CSV are discarded as error. To view error records, Click
+				<%= link_to "here", showerrorrecord_datauploaders_path({:table_name => @table_name, :is_schema_error => false}), :type=>"button", :class=>"link" %>
+			</p>
+		</div>
+	<% elsif @summary[:success_record] == 100 then %>
+		<div class="alert alert-success">
+			<button data-dismiss="alert" class="close" type="button">×</button>
+			<p><strong>Summary: </strong>All records in the CSV are successfully processed</p>
+		</div>
+	<% else %>
+		<div class="alert alert-info">
+			<button data-dismiss="alert" class="close" type="button">×</button>
+				<p><strong>Summary: </strong>Showing <%= @summary[:success_record] %> % successfully processed records out of <%= @summary[:total_record] %> records. Other <%= @summary[:error_record] %> % records are discarded as error. To view error records, Click <%= link_to "here", showerrorrecord_datauploaders_path({:table_name => @table_name, :is_schema_error => false}), :type=>"button", :class=>"link" %>					
+				<p>
+		</div>
+	<% end %>
+<% end %>
 <input type="hidden" id="page_params" value=<%= @table_name %>>
 <table id="uploadedRecords" class="table table-striped table-bordered dataTable" cellspacing="0" width="100%">     
 </table>

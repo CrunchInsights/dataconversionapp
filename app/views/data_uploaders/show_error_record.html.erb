@@ -1,4 +1,27 @@
 <h2>Error Records</h2>
+<% if @is_schema_error != "true" then %>
+  <% if @summary[:total_record] >= 0 then %>
+    <% if @summary[:error_record] == 0 then %>
+      <div class="alert alert-success">
+        <button data-dismiss="alert" class="close" type="button">×</button>
+        <p><strong>Summary: </strong>All records in the CSV are successfully processed. To view successfully processed records, Click
+          <%= link_to "here", uploadfilerecord_datauploaders_path({:table_name => @table_name}), :type=>"button", :class=>"link" %>
+        </p>
+      </div>
+    <% elsif @summary[:error_record] == 100 then %>
+      <div class="alert alert-waring">
+        <button data-dismiss="alert" class="close" type="button">×</button>
+        <p><strong>Summary: </strong>All records in the CSV are discarded as error.</p>
+      </div>
+    <% else %>
+      <div class="alert alert-info">
+        <button data-dismiss="alert" class="close" type="button">×</button>
+          <p><strong>Summary: </strong>Showing <%= @summary[:error_record] %> % error records out of <%= @summary[:total_record] %> records. Other <%= @summary[:success_record] %> % records are successfully processed. To view successfully processed records, Click <%= link_to "here", uploadfilerecord_datauploaders_path({:table_name => @table_name}), :type=>"button", :class=>"link" %>         
+          <p>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>
 <table class="table table-striped table-bordered custom_table table-hover table-highlight">
   <thead>    
     <tr>
