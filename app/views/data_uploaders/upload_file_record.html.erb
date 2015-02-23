@@ -3,8 +3,7 @@
 	<% if @summary[:success_record] == 0 then %>
 		<div class="alert alert-warning">
 			<button data-dismiss="alert" class="close" type="button">×</button>
-			<p><strong>Summary: </strong>All records in the CSV are discarded as error. To view error records, Click
-				<%= link_to "here", showerrorrecord_datauploaders_path({:table_name => @table_name, :is_schema_error => false}), :type=>"button", :class=>"link" %>
+			<p><strong>Summary: </strong>All records in the CSV are discarded as error.
 			</p>
 		</div>
 	<% elsif @summary[:success_record] == 100 then %>

@@ -78,8 +78,8 @@ class DataUploadersController < ApplicationController
     @summary[:success_record] = user_file_mappings.success_records  ? user_file_mappings.success_records : 0
     @summary[:error_record] = user_file_mappings.error_records ? user_file_mappings.error_records : 0
     if @summary[:total_record] >= 0 then
-      @summary[:success_record] = ((@summary[:success_record].to_f/@summary[:total_record])*100).round(2)
-      @summary[:error_record] = ((@summary[:error_record].to_f/@summary[:total_record])*100).round(2)
+      @summary[:success_record] = @summary[:success_record] == 0 ? 0 : ((@summary[:success_record].to_f/@summary[:total_record])*100).round(2)
+      @summary[:error_record] = @summary[:error_record] == 0 ? 0 : ((@summary[:error_record].to_f/@summary[:total_record])*100).round(2)
     end
     page_size = 10
     page_index = 0
@@ -211,7 +211,7 @@ class DataUploadersController < ApplicationController
     end
   end
 
-  def process_on_file(csvdatafile,table_name)   
+  def process_on_file(csvdatafile, table_name)   
       csv_data = []       
       max_row_size = 0            
       columns = []
@@ -227,7 +227,7 @@ class DataUploadersController < ApplicationController
             break
           end
           max_row_size = columns.size
-        elsif max_row_size == row.to_a.size         
+        elsif max_row_size == row.to_a.size
           temp_row = row.to_a
           if DataUploader.contain_blank_value(temp_row) 
             error_row_num_list.append(row_id)
@@ -235,318 +235,323 @@ class DataUploadersController < ApplicationController
           else
             csv_data.append(row.to_a)
           end              
-        else 
+        else
           error_row_num_list.append(row_id)
           error_record_list.append({:row_id => row_id, :error => "Record cannot be inserted due to unmatched length with header", :error_record => row.to_a})
         end                  
       end 
-      puts "################### CSV DATA IS READY ##########################"     
-      @columns_detail = []
-      if is_repeated_column  then        
-        add_file_detail = UserFileMapping.update_uploaded_file_status(table_name, Constant.file_upload_status_constants[:file_uploaded_with_error])       
-        FileUploadErrorMessage.create(
-                            table_name: table_name,
-                            error_message: "Unable to analyze the CSV due to repeated columns")
-      else        
-      csv_data = csv_data.transpose
-      columns.each_with_index do |column, colindex|
-        puts ":::::::::::::: COLUMNS ::::::::::::::::::"
-        puts column
-        puts colindex
-        column = column.gsub(/[^0-9A-Za-z]/, '').strip.tr(' ', '').downcase
-        column = (column == nil) ||(column == "null") || (column == "nil") || (column == "") ? "column" + colindex.to_s : column                            
-        column_detail = {column_name: column,
-                        is_nullable: false,
-                        data_type: "",
-                        date_format:"",
-                        time_format: "",
-                        field_length: "0",
-                        money_symbol: "",
-                        is_money_format: false,
-                        money_symbol_position: "",
-                        is_percentage: false,
-                        is_unique: true}
-      
-        #trim blank spaces at beginning and end
-        csv_data[colindex] = csv_data[colindex].collect{|x| if (x!=nil) then x.strip end}
-        
-        # check column contain more than 1 value of nil and blank
-        if ((csv_data[colindex].count(nil) > 1) || (csv_data[colindex].count("") > 1)) then
-          column_detail[:is_unique] = false
-        end
-        # check column is nullable
-        if ((csv_data[colindex].count(nil) > 0) || (csv_data[colindex].count("") > 0)) then
-          column_detail[:is_nullable] = true
-        end
-        #removing blank, null and nil values from array
-        csv_data[colindex] = csv_data[colindex].reject { |c| c.blank? }
-        # convert in downcase each value of array
-        csv_data[colindex] = csv_data[colindex].map(&:downcase)
-        if ((csv_data[colindex].count("null") > 1) && (column_detail[:is_unique] == true))then
-          column_detail[:is_unique] = false
-        end
-        # check column is nullable and delete "null" or "nil" values 
-        if ((csv_data[colindex].count("null") > 0) || (csv_data[colindex].count("nil") > 0)) then
-          column_detail[:is_nullable] = true
-          if ((csv_data[colindex].include? 'null') == true) then
-            csv_data[colindex].delete("null")
-          end
-          if ((csv_data[colindex].include? 'nil') == true) then
-            csv_data[colindex].delete("nil")
-          end
-        end
-        # check column is unique values 
-        if column_detail[:is_unique] then
-          if csv_data[colindex].size == csv_data[colindex].uniq.size  then
-            column_detail[:is_unique] = true
+      puts "################### CSV DATA IS READY ##########################"  
+      puts csv_data.size   
+      if csv_data.size > 0 then
+        @columns_detail = []
+        if is_repeated_column  then        
+          add_file_detail = UserFileMapping.update_uploaded_file_status(table_name, Constant.file_upload_status_constants[:file_uploaded_with_error])
+          FileUploadErrorMessage.create(
+                              table_name: table_name,
+                              error_message: "Unable to analyze the CSV due to repeated columns")
+        else        
+          csv_data = csv_data.transpose
+          columns.each_with_index do |column, colindex|
+            puts ":::::::::::::: COLUMNS ::::::::::::::::::"
+            puts column
+            puts colindex
+            column = column.gsub(/[^0-9A-Za-z]/, '').strip.tr(' ', '').downcase
+            column = (column == nil) ||(column == "null") || (column == "nil") || (column == "") ? "column" + colindex.to_s : column                            
+            column_detail = {column_name: column,
+                            is_nullable: false,
+                            data_type: "",
+                            date_format:"",
+                            time_format: "",
+                            field_length: "0",
+                            money_symbol: "",
+                            is_money_format: false,
+                            money_symbol_position: "",
+                            is_percentage: false,
+                            is_unique: true}
+          
+            #trim blank spaces at beginning and end
+            csv_data[colindex] = csv_data[colindex].collect{|x| if (x!=nil) then x.strip end}
+            
+            # check column contain more than 1 value of nil and blank
+            if ((csv_data[colindex].count(nil) > 1) || (csv_data[colindex].count("") > 1)) then
+              column_detail[:is_unique] = false
+            end
+            # check column is nullable
+            if ((csv_data[colindex].count(nil) > 0) || (csv_data[colindex].count("") > 0)) then
+              column_detail[:is_nullable] = true
+            end
+            #removing blank, null and nil values from array
+            csv_data[colindex] = csv_data[colindex].reject { |c| c.blank? }
+            # convert in downcase each value of array
+            csv_data[colindex] = csv_data[colindex].map(&:downcase)
+            if ((csv_data[colindex].count("null") > 1) && (column_detail[:is_unique] == true))then
+              column_detail[:is_unique] = false
+            end
+            # check column is nullable and delete "null" or "nil" values 
+            if ((csv_data[colindex].count("null") > 0) || (csv_data[colindex].count("nil") > 0)) then
+              column_detail[:is_nullable] = true
+              if ((csv_data[colindex].include? 'null') == true) then
+                csv_data[colindex].delete("null")
+              end
+              if ((csv_data[colindex].include? 'nil') == true) then
+                csv_data[colindex].delete("nil")
+              end
+            end
+            # check column is unique values 
+            if column_detail[:is_unique] then
+              if csv_data[colindex].size == csv_data[colindex].uniq.size  then
+                column_detail[:is_unique] = true
+              else
+                column_detail[:is_unique] = false
+              end
+            end
+            # set default field length 
+            if csv_data[colindex].size == 0 then
+              column_detail[:data_type] = "string"
+              column_detail[:field_length] = "10"
+            else
+              if csv_data[colindex].size > 0 then
+                # Check array containing integer values only
+                if column_detail[:data_type]=="" then
+                  begin
+                    bool_arr = ['true', '1', 'yes', 'on', 'false', '0', 'no', 'off', 0, 1]
+                    if (csv_data[colindex] - bool_arr).empty? then
+                      column_detail[:data_type] = "boolean"
+                    end
+                  rescue
+                    # catch code at here
+                  end
+                end
+                is_datetime = false
+                input_field_splitter_used = ''
+                if (((csv_data[colindex].collect{|v| v.include? '-'}).uniq).include? false)== false then
+                input_field_splitter_used = '-'
+                  is_datetime = true
+                end
+                if (((csv_data[colindex].collect{|v| v.include? '/'}).uniq).include? false) == false then
+                input_field_splitter_used = '/'
+                  is_datetime = true
+                end
+                if is_datetime then
+                  puts "################### Csv Data csv_data ##########################"
+                  puts  csv_data[colindex]
+                  temp_arr = csv_data[colindex].collect{|x| x.tr("-/", ' ')}
+                  puts "################### Csv Data DAte ##########################"
+                  puts temp_arr
+                  # Check array containing date values only
+                  if column_detail[:data_type] == "" then
+                    begin                  
+                      is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%m %d %Y")}
+                      column_detail[:data_type] = "datetime"
+                      column_detail[:date_format] = "%m" + input_field_splitter_used + "%d" + input_field_splitter_used + "%Y"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                  # Check array containing date values only
+                  if column_detail[:data_type] == "" then
+                    begin
+                      is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%d %m %Y")}
+                      column_detail[:data_type] = "datetime"
+                      column_detail[:date_format] = "%d" + input_field_splitter_used + "%m" + input_field_splitter_used + "%Y"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                  # Check array containing date values only
+                  if column_detail[:data_type] == "" then
+                    begin
+                      is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%Y %m %d")}
+                      column_detail[:data_type] = "datetime"
+                      column_detail[:date_format]="%Y" + input_field_splitter_used +  "%m" + input_field_splitter_used + "%d"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                  # Check array containing date values only
+                  if column_detail[:data_type] == "" then
+                    begin
+                      is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%Y %d %m")}
+                      column_detail[:data_type] = "datetime"
+                      column_detail[:date_format] = "%Y" + input_field_splitter_used +  "%d" + input_field_splitter_used + "%m"
+                      column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                  # Check array containing date values only
+                  if column_detail[:data_type] == "" then
+                    begin
+                      is_data_integer=csv_data[colindex].collect{|val| DateTime.parse(val)}
+                      column_detail[:data_type] = "datetime"
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                end
+                # Check array containing integer values only
+                if column_detail[:data_type]=="" then
+                  begin
+                    is_data_integer=csv_data[colindex].collect{|val| Integer(val)}
+                    column_detail[:data_type] = "integer"
+                    temp_arr = csv_data[colindex].collect{|val| Integer(val) == 0 ? "0" : val }
+                    temp_arr.delete("0")
+                    is_string = false
+                    temp_arr.each do |temp_arr_val|
+                      if temp_arr_val[0] == "0" then
+                        is_string = true
+                        break
+                      end
+                    end
+                    if is_string == true then
+                      column_detail[:data_type] = "string"
+                    end                
+                  rescue
+                    # catch code at here
+                  end
+                end  
+                # check array containing money format
+                if column_detail[:data_type]=="" then
+                  begin
+                    money_symbol = ''
+                    symbol_length = 0
+                    #byebug
+                    money_symbols = ['$','€','£','¥','Fr','kr','zł','Ft','Kč','A$','R$','RM','₱','NT$','฿', 'TRY', '₹']
+                    money_symbols.each do |symbol|
+                      symbol_length = symbol.size
+                      if (csv_data[colindex].collect{|k| k[0...symbol_length]}.uniq)[0] == symbol then
+                        money_symbol = symbol
+                        column_detail[:is_money_format] = true
+                        column_detail[:money_symbol_position] = "start"
+                      break
+                      end
+                      if (csv_data[colindex].collect{|k| k[(k.size-symbol_length)...k.size]}.uniq)[0] == symbol then
+                        money_symbol = symbol
+                        column_detail[:is_money_format] = true
+                        column_detail[:money_symbol_position] = "end"
+                        break
+                      end
+                    end
+                    if money_symbol != '' then
+                      temp_arr = csv_data[colindex].collect{|x| x.tr(money_symbol, '').strip}
+                      is_data_integer=temp_arr.collect{|val| Float(val.gsub(/,/,''))}
+                      max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+                      column_detail[:data_type] = "decimal"
+                      column_detail[:money_symbol] = money_symbol
+                    end
+                  rescue
+                    # catch code at here
+                  end
+                end
+                # check array containing percentage format
+                if column_detail[:data_type]=="" then
+                  begin
+                    symbol_length = 1
+                    percent_symbols = ['%']
+                    percent_symbols.each do |symbol|
+                      if (csv_data[colindex].collect{|k| k[0...symbol_length]}.uniq)[0] == symbol then
+                        column_detail[:is_percentage] = true
+                        break
+                      end
+                      if (csv_data[colindex].collect{|k| k[(k.size-symbol_length)...k.size]}.uniq)[0] == symbol then
+                        column_detail[:is_percentage] = true
+                        break
+                      end
+                    end
+                    if column_detail[:is_percentage] then
+                      temp_arr = csv_data[colindex].collect{|x| x.tr('%', '').strip}
+                      is_data_integer=temp_arr.collect{|val| Float(val.gsub(/,/,''))}
+                      max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                      column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+                      column_detail[:data_type] = "decimal"
+                    end
+                  rescue
+                    # catch code at here
+                  end
+                end
+                # Check array containing float values only
+                if column_detail[:data_type]=="" then
+                  begin
+                    is_data_integer = csv_data[colindex].collect{|val| Float(val)}
+                    max_length_after_decimal = (((csv_data[colindex].map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                    max_length_before_decimal = (((csv_data[colindex].map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+                    column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+                    column_detail[:data_type] = "decimal"
+                  rescue
+                    # catch code at here
+                  end
+                end
+                if column_detail[:data_type] == "" then
+                  begin
+                    is_data_integer=csv_data[colindex].collect{|val| DateTime.parse(val)}
+                    column_detail[:data_type] = "datetime"
+                  rescue
+                    # catch code at here
+                  end
+                end
+                # Check array containing string values
+                if column_detail[:data_type]=="" then
+                  begin
+                    is_data_integer = csv_data[colindex].collect{|val| String(val)}
+                    column_detail[:data_type] = "string"
+                  rescue
+                    # catch code at here
+                  end
+                end
+                if column_detail[:data_type]!= 'decimal' then
+                  column_detail[:field_length] = ((csv_data[colindex].group_by(&:size).max.last)[0].size) + 1
+                end
+              end
+            end
+            @columns_detail.append(column_detail)
+          end 
+          is_table_created = DataUploader.create_dynamic_table(table_name, @columns_detail)
+          if is_table_created
+            begin
+              @columns_detail.each do |column|
+                if ((column[:is_money_format]==true) || (column[:is_percentage] == true)) then
+                  update_column_info=UserTableColumnInformation.create(
+                      table_name: table_name,
+                      column_name: column[:column_name],
+                      money_format:  column[:money_symbol],
+                      is_disable: false,
+                      is_percentage_value: column[:is_percentage],
+                      created_by: current_user.id,
+                      created_on: Time.now ,
+                      modified_by: current_user.id,
+                      modified_on: Time.now)
+                end
+              end
+              user_table_mapping = UserFileMapping.where("table_name =?", table_name).first
+              if user_table_mapping then
+                user_table_mapping.is_table_created = true
+                user_table_mapping.has_error_record = error_row_num_list.size > 0?true:false
+                user_table_mapping.save
+              end
+            rescue      
+            end             
+            DataUploader.insert_csv_data(csvdatafile, table_name, @columns_detail, error_row_num_list)
+            if error_record_list.size > 0 then
+              DataUploader.insert_error_detail(table_name, error_record_list)
+            end
+            respond_to do |format|          
+              format.json { render :json =>true}
+            end
           else
-            column_detail[:is_unique] = false
-          end
-        end
-        # set default field length 
-        if csv_data[colindex].size == 0 then
-          column_detail[:data_type] = "string"
-          column_detail[:field_length] = "10"
-        else
-          if csv_data[colindex].size > 0 then
-            # Check array containing integer values only
-            if column_detail[:data_type]=="" then
-              begin
-                bool_arr = ['true', '1', 'yes', 'on', 'false', '0', 'no', 'off', 0, 1]
-                if (csv_data[colindex] - bool_arr).empty? then
-                  column_detail[:data_type] = "boolean"
-                end
-              rescue
-                # catch code at here
-              end
-            end
-            is_datetime = false
-            input_field_splitter_used = ''
-            if (((csv_data[colindex].collect{|v| v.include? '-'}).uniq).include? false)== false then
-            input_field_splitter_used = '-'
-              is_datetime = true
-            end
-            if (((csv_data[colindex].collect{|v| v.include? '/'}).uniq).include? false) == false then
-            input_field_splitter_used = '/'
-              is_datetime = true
-            end
-            if is_datetime then
-              puts "################### Csv Data csv_data ##########################"
-              puts  csv_data[colindex]
-              temp_arr = csv_data[colindex].collect{|x| x.tr("-/", ' ')}
-              puts "################### Csv Data DAte ##########################"
-              puts temp_arr
-              # Check array containing date values only
-              if column_detail[:data_type] == "" then
-                begin                  
-                  is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%m %d %Y")}
-                  column_detail[:data_type] = "datetime"
-                  column_detail[:date_format] = "%m" + input_field_splitter_used + "%d" + input_field_splitter_used + "%Y"
-                  column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
-                rescue
-                  # catch code at here
-                end
-              end
-              # Check array containing date values only
-              if column_detail[:data_type] == "" then
-                begin
-                  is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%d %m %Y")}
-                  column_detail[:data_type] = "datetime"
-                  column_detail[:date_format] = "%d" + input_field_splitter_used + "%m" + input_field_splitter_used + "%Y"
-                  column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
-                rescue
-                  # catch code at here
-                end
-              end
-              # Check array containing date values only
-              if column_detail[:data_type] == "" then
-                begin
-                  is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%Y %m %d")}
-                  column_detail[:data_type] = "datetime"
-                  column_detail[:date_format]="%Y" + input_field_splitter_used +  "%m" + input_field_splitter_used + "%d"
-                  column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
-                rescue
-                  # catch code at here
-                end
-              end
-              # Check array containing date values only
-              if column_detail[:data_type] == "" then
-                begin
-                  is_data_integer=temp_arr.collect{|val| Date.strptime(val, "%Y %d %m")}
-                  column_detail[:data_type] = "datetime"
-                  column_detail[:date_format] = "%Y" + input_field_splitter_used +  "%d" + input_field_splitter_used + "%m"
-                  column_detail[:time_format]= DataUploader.check_is_date_time(temp_arr, "%m %d %Y")
-                rescue
-                  # catch code at here
-                end
-              end
-              # Check array containing date values only
-              if column_detail[:data_type] == "" then
-                begin
-                  is_data_integer=csv_data[colindex].collect{|val| DateTime.parse(val)}
-                  column_detail[:data_type] = "datetime"
-                rescue
-                  # catch code at here
-                end
-              end
-            end
-            # Check array containing integer values only
-            if column_detail[:data_type]=="" then
-              begin
-                is_data_integer=csv_data[colindex].collect{|val| Integer(val)}
-                column_detail[:data_type] = "integer"
-                temp_arr = csv_data[colindex].collect{|val| Integer(val) == 0 ? "0" : val }
-                temp_arr.delete("0")
-                is_string = false
-                temp_arr.each do |temp_arr_val|
-                  if temp_arr_val[0] == "0" then
-                    is_string = true
-                    break
-                  end
-                end
-                if is_string == true then
-                  column_detail[:data_type] = "string"
-                end                
-              rescue
-                # catch code at here
-              end
-            end  
-            # check array containing money format
-            if column_detail[:data_type]=="" then
-              begin
-                money_symbol = ''
-                symbol_length = 0
-                #byebug
-                money_symbols = ['$','€','£','¥','Fr','kr','zł','Ft','Kč','A$','R$','RM','₱','NT$','฿', 'TRY', '₹']
-                money_symbols.each do |symbol|
-                  symbol_length = symbol.size
-                  if (csv_data[colindex].collect{|k| k[0...symbol_length]}.uniq)[0] == symbol then
-                    money_symbol = symbol
-                    column_detail[:is_money_format] = true
-                    column_detail[:money_symbol_position] = "start"
-                  break
-                  end
-                  if (csv_data[colindex].collect{|k| k[(k.size-symbol_length)...k.size]}.uniq)[0] == symbol then
-                    money_symbol = symbol
-                    column_detail[:is_money_format] = true
-                    column_detail[:money_symbol_position] = "end"
-                    break
-                  end
-                end
-                if money_symbol != '' then
-                  temp_arr = csv_data[colindex].collect{|x| x.tr(money_symbol, '').strip}
-                  is_data_integer=temp_arr.collect{|val| Float(val.gsub(/,/,''))}
-                  max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                  max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                  column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
-                  column_detail[:data_type] = "decimal"
-                  column_detail[:money_symbol] = money_symbol
-                end
-              rescue
-                # catch code at here
-              end
-            end
-            # check array containing percentage format
-            if column_detail[:data_type]=="" then
-              begin
-                symbol_length = 1
-                percent_symbols = ['%']
-                percent_symbols.each do |symbol|
-                  if (csv_data[colindex].collect{|k| k[0...symbol_length]}.uniq)[0] == symbol then
-                    column_detail[:is_percentage] = true
-                    break
-                  end
-                  if (csv_data[colindex].collect{|k| k[(k.size-symbol_length)...k.size]}.uniq)[0] == symbol then
-                    column_detail[:is_percentage] = true
-                    break
-                  end
-                end
-                if column_detail[:is_percentage] then
-                  temp_arr = csv_data[colindex].collect{|x| x.tr('%', '').strip}
-                  is_data_integer=temp_arr.collect{|val| Float(val.gsub(/,/,''))}
-                  max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                  max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                  column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
-                  column_detail[:data_type] = "decimal"
-                end
-              rescue
-                # catch code at here
-              end
-            end
-            # Check array containing float values only
-            if column_detail[:data_type]=="" then
-              begin
-                is_data_integer = csv_data[colindex].collect{|val| Float(val)}
-                max_length_after_decimal = (((csv_data[colindex].map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                max_length_before_decimal = (((csv_data[colindex].map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
-                column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
-                column_detail[:data_type] = "decimal"
-              rescue
-                # catch code at here
-              end
-            end
-            if column_detail[:data_type] == "" then
-              begin
-                is_data_integer=csv_data[colindex].collect{|val| DateTime.parse(val)}
-                column_detail[:data_type] = "datetime"
-              rescue
-                # catch code at here
-              end
-            end
-            # Check array containing string values
-            if column_detail[:data_type]=="" then
-              begin
-                is_data_integer = csv_data[colindex].collect{|val| String(val)}
-                column_detail[:data_type] = "string"
-              rescue
-                # catch code at here
-              end
-            end
-            if column_detail[:data_type]!= 'decimal' then
-              column_detail[:field_length] = ((csv_data[colindex].group_by(&:size).max.last)[0].size) + 1
+            respond_to do |format|          
+              format.json { render :json =>false}
             end
           end
-        end
-        @columns_detail.append(column_detail)
-      end 
-        is_table_created = DataUploader.create_dynamic_table(table_name, @columns_detail)
-        if is_table_created
-          begin
-            @columns_detail.each do |column|
-              if ((column[:is_money_format]==true) || (column[:is_percentage] == true)) then
-                update_column_info=UserTableColumnInformation.create(
-                    table_name: table_name,
-                    column_name: column[:column_name],
-                    money_format:  column[:money_symbol],
-                    is_disable: false,
-                    is_percentage_value: column[:is_percentage],
-                    created_by: current_user.id,
-                    created_on: Time.now ,
-                    modified_by: current_user.id,
-                    modified_on: Time.now)
-              end
-            end
-            user_table_mapping = UserFileMapping.where("table_name =?", table_name).first
-            if user_table_mapping then
-              user_table_mapping.is_table_created = true
-              user_table_mapping.has_error_record = error_row_num_list.size > 0?true:false
-              user_table_mapping.save
-            end
-          rescue      
-          end             
-          DataUploader.insert_csv_data(csvdatafile, table_name, @columns_detail, error_row_num_list)
-          if error_record_list.size > 0 then
-            DataUploader.insert_error_detail(table_name, error_record_list)
-          end
-          respond_to do |format|          
-            format.json { render :json =>true}
-          end
-        else
-          respond_to do |format|          
-            format.json { render :json =>false}
-          end
-        end
-	    end
+  	    end
+      else
+        UserFileMapping.update_uploaded_file_status(table_name, Constant.file_upload_status_constants[:file_uploaded_with_no_record])
+      end
   end
 
   def show_error_record
@@ -563,8 +568,8 @@ class DataUploadersController < ApplicationController
       @summary[:success_record] = user_file_mappings.success_records  ? user_file_mappings.success_records : 0
       @summary[:error_record] = user_file_mappings.error_records ? user_file_mappings.error_records : 0
       if @summary[:total_record] >= 0 then
-        @summary[:success_record] = ((@summary[:success_record].to_f/@summary[:total_record])*100).round(2)
-        @summary[:error_record] = ((@summary[:error_record].to_f/@summary[:total_record])*100).round(2)
+        @summary[:success_record] = @summary[:success_record] == 0 ? 0 :((@summary[:success_record].to_f/@summary[:total_record])*100).round(2)
+        @summary[:error_record] = @summary[:error_record] == 0 ? 0 : ((@summary[:error_record].to_f/@summary[:total_record])*100).round(2)
       end
       @result = TableErrorRecord.table_error_record(@table_name)
     end    
