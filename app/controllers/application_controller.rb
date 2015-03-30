@@ -5,15 +5,20 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
 
   def get_user_table_column_info(table_name)
-    table_column_info = UserTableColumnInformation.where("table_name =? and is_disable =?", table_name, true)
+    table_column_info = UserTableColumnInformation.where("table_name =?", table_name)
     table_column_info=table_column_info.to_a
-    disabled_column = []
+    column_detail_array = []
     if table_column_info.size > 0 then
       table_column_info.each do |column|
-        disabled_column.append(column.column_name)
+        column_detail_hash = {:column_name=> '', :money_format=> '', :is_disable => false, :percentage_format => false}
+        column_detail_hash[:column_name] = column.column_name  
+        column_detail_hash[:money_format] = column.money_format 
+        column_detail_hash[:is_disable] = column.is_disable 
+        column_detail_hash[:percentage_format] =  column.is_percentage_value 
+        column_detail_array.append(column_detail_hash)
       end
     end
-    return disabled_column
+    return column_detail_array
   end
 
   def initalize_breadcrumb(breadcrumb_name, breadcrumb_path)

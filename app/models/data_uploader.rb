@@ -15,6 +15,8 @@ class DataUploader < ActiveRecord::Base
                   t.column column_struct[:column_name], column_struct[:data_type], null: column_struct[:is_nullable], precision: (column_struct[:field_length].split(',')[0]).to_i, scale: (column_struct[:field_length].split(',')[1]).to_i
                 when 'datetime'
                   t.column column_struct[:column_name], column_struct[:data_type], null: column_struct[:is_nullable]
+                when 'time'
+                  t.column column_struct[:column_name], column_struct[:data_type], null: column_struct[:is_nullable]               
                 when 'integer'
                   if column_struct[:is_unique] == true then
                     unique_columns.append(column_struct[:column_name])
@@ -72,6 +74,8 @@ class DataUploader < ActiveRecord::Base
           result_schema[:Type] = result["type"]
           result_schema[:Null] = result["nullable"]
           result_schema[:Key] = result["key"]
+          result_schema[:money_symbol] = ''
+          result_schema[:is_percentage] = false
           uploaded_schema.append(result_schema)
 
         end
@@ -132,6 +136,8 @@ class DataUploader < ActiveRecord::Base
                             end
                           elsif column_structure_object[col_index][:data_type] == "string" then
                             inserted_row_string = inserted_row_string + "'" + inserted_row_value.strip.to_s + "', "
+                          elsif column_structure_object[col_index][:data_type] == "time" then
+                            inserted_row_string = inserted_row_string + "'" + (inserted_row_value.strip.to_time).to_s + "', "
                           elsif column_structure_object[col_index][:data_type] == "boolean" then
                             if inserted_row_value == 'on' then
                               inserted_row_string = inserted_row_string + true.to_s + ", "
@@ -165,7 +171,7 @@ class DataUploader < ActiveRecord::Base
                   inserted_row_arr.append(values)                                     
                 end                        
                 chunk=chunk + 1           
-                if chunk > 2 then
+                if chunk > 50 then
                   chunk=0
                   my_sql="INSERT INTO \"#{table_name}\" (#{table_col_str}) Values "+inserted_row_arr.join(', ')
                   inserted_row_arr=[]
@@ -287,22 +293,32 @@ class DataUploader < ActiveRecord::Base
 
   def self.insert_error_detail(table_name, error_record_list)
     puts "Error record insert begin here......"
-    
-     begin
-      error_record_list.each do |error_record|
-          puts  error_record
-          TableErrorRecord.create(
-                                  table_name: table_name,
-                                  row_id: error_record[:row_id],
-                                  error_message:  error_record[:error],
-                                  error_record: error_record[:error_record].to_s
-                                )
+    begin
+      target_bucket_name =  S3_ERROR_BUCKET_NAME
+      target_file_name = "error" + table_name.to_s + ".csv"
+      obj = target_bucket_name.objects.create(target_file_name, '')
+      i = 0
+      csv_string = CSV.generate do |csv|
+        csv << ["row_id", "error_message", "error_record"]
+        error_record_list.each do |error_record|  
+          i = i + 1
+          csv << [error_record[:row_id].to_s, error_record[:error].to_s, error_record[:error_record].to_s]    
+          if i > 50 then
+            read = obj.read + csv_string
+            obj.write(read)
+            csv_string=''
+            i=0
+          end   
+        end
       end
-     rescue Exception => e
-       puts e
-     end    
-      
-   
+      if i > 0 then
+        read = obj.read + csv_string
+        error_record_array = []
+        obj.write(read)
+      end
+    rescue Exception => e
+      puts e
+    end    
   end
 
   def self.contain_blank_value(temp_row)
@@ -364,5 +380,264 @@ class DataUploader < ActiveRecord::Base
       end
     end
     return is_process_complete
+  end
+
+  def self.processing_on_single_row(row, columns_datatype_array)
+    
+    row.each_with_index do |value, value_index|
+      data_type = ""
+      # check value is an boolean or not
+      if data_type == "" then
+        begin
+          bool_arr = ['true', '1', 'yes', 'on', 'false', '0', 'no', 'off', 0, 1]
+          if (value.class.to_s) =="String"
+            if (bool_arr.include? value.downcase) == true then
+              columns_datatype_array[value_index][:boolean] = columns_datatype_array[value_index][:boolean] + 1;
+              data_type="boolean"
+            end
+          else
+            if (bool_arr.include? value) == true then
+              columns_datatype_array[value_index][:boolean] = columns_datatype_array[value_index][:boolean] + 1;
+              data_type="boolean"
+            end
+          end
+        rescue
+            # catch code at here
+        end
+      end
+      # check value is an datetime 
+      if data_type == "" then
+        input_field_splitter_used = ''
+        temp_val = value
+        if (temp_val.include? '-') == true then
+          input_field_splitter_used = '-'
+        end
+        if (temp_val.include? '/') == true then
+          input_field_splitter_used = '/'
+        end
+        
+        if input_field_splitter_used != ''
+          if data_type == ""
+            begin         
+            temp_val = temp_val.tr("-/", ' ')
+            temp_val = Date.strptime(temp_val, "%m %d %Y") 
+            columns_datatype_array[value_index][:datetime] = columns_datatype_array[value_index][:datetime] + 1;
+            data_type="datetime"         
+            rescue
+              # catch code at here
+            end
+          end
+
+          # check value is an datetime ( with  "%d %m %Y") !!
+          if data_type == ""
+            begin
+              temp_val = temp_val.tr("-/", ' ')
+              temp_val = Date.strptime(temp_val, "%d %m %Y") 
+              columns_datatype_array[value_index][:datetime] = columns_datatype_array[value_index][:datetime] + 1;
+              data_type="datetime"
+              #DataUploader.check_is_date_time(temp_val, "%m %d %Y")
+            rescue
+              # catch code at here
+            end
+          end
+
+          # check value is an datetime ( with "%Y %m %d") !!
+          if data_type == ""
+            begin
+              temp_val = temp_val.tr("-/", ' ')
+              temp_val = Date.strptime(temp_val, "%Y %m %d") 
+              columns_datatype_array[value_index][:datetime] = columns_datatype_array[value_index][:datetime] + 1;
+              data_type="datetime"
+              #DataUploader.check_is_date_time(temp_val, "%m %d %Y")
+            rescue
+            # catch code at here
+            end
+          end
+          
+          # check value is an datetime ( with ""%Y %d %m"") !!
+          if data_type == ""
+            begin
+              temp_val = temp_val.tr("-/", ' ')
+              temp_val = Date.strptime(temp_val, "%Y %d %m") 
+              columns_datatype_array[value_index][:datetime] = columns_datatype_array[value_index][:datetime] + 1;
+              data_type="datetime"
+              #DataUploader.check_is_date_time(temp_val, "%m %d %Y")
+            rescue
+              # catch code at here
+            end
+          end
+        end
+      end
+      # check value is an integer ( also consider string if integer value with leading 0, for pincode or telephone numbers)
+      if data_type == "" then
+        begin
+          temp_val = Integer(value)
+          temp_arr =  Integer(value) == 0 ? "0" : value 
+          is_string = false  
+          # this code is write for check is this integer value can be a telephone or pincode numer 
+          # so we are consider if any integer value with leading 0 value, will be a telephone or pincode numer 
+          if value[0] == "0" && temp_arr != "0" then
+            is_string = true
+          end
+          if is_string == true then
+            columns_datatype_array[value_index][:string] = columns_datatype_array[value_index][:string] + 1; 
+            data_type="string"
+          elsif 
+            columns_datatype_array[value_index][:integer] = columns_datatype_array[value_index][:integer] + 1; 
+            data_type="integer"
+          end                                  
+        rescue
+            # catch code at here
+        end
+      end
+      if data_type == "" then
+        begin
+          temp_value = DateTime.parse(value)
+          columns_datatype_array[value_index][:datetime] = columns_datatype_array[value_index][:datetime] + 1;
+          data_type="datetime"
+          #DataUploader.check_is_date_time(temp_val, "%m %d %Y")
+        rescue
+          #catch code at here
+        end
+      end
+      # check value is an money format ( with leading and ending money symbols) 
+      if data_type == "" then
+        begin
+          money_symbol = ''
+          symbol_length = 0
+          money_symbols = ['$','€','£','¥','Fr','kr','zł','Ft','Kč','A$','R$','RM','₱','NT$','฿', 'TRY', '₹']
+          money_symbols.each do |symbol|
+            symbol_length = symbol.size
+            if (value[0...symbol_length][0] == symbol) then
+              money_symbol = symbol
+              #column_detail[:is_money_format] = true
+              #column_detail[:money_symbol_position] = "start"
+            break
+            end
+            if value[(value.size-symbol_length)...value.size][0] == symbol then
+              money_symbol = symbol
+              #column_detail[:is_money_format] = true
+              #column_detail[:money_symbol_position] = "end"
+              break
+            end
+          end
+          if money_symbol != '' then
+            temp_arr = value.tr(money_symbol, '').strip
+            is_data_integer=Float(temp_arr.gsub(/,/,''))
+
+            #max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+            #max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+            #column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+            columns_datatype_array[value_index][:decimal] = columns_datatype_array[value_index][:decimal] + 1;
+            data_type="decimal" 
+            #column_detail[:money_symbol] = money_symbol
+          end
+        rescue
+          # catch code at here
+        end
+      end
+      # check value is an percentage/rate ( with last value will be a percentage symbol) type !!
+      if data_type == "" then
+        begin
+          symbol_length = 1
+          percent_symbols = ['%']
+          is_percentage = false
+          percent_symbols.each do |symbol|
+            if value[0...symbol_length][0] == symbol then
+              #column_detail[:is_percentage] = true
+              is_percentage = true
+              break
+            end
+            if value[(value.size-symbol_length)...value.size][0] == symbol then
+              #column_detail[:is_percentage] = true
+              is_percentage = true
+              break
+            end
+          end
+          if is_percentage == true then
+            temp_arr = value.tr('%', '').strip
+            is_an_float_value = Float(temp_arr.gsub(/,/,''))
+            #max_length_after_decimal = (((temp_arr.map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+            #max_length_before_decimal = (((temp_arr.map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+            #column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+            columns_datatype_array[value_index][:decimal] = columns_datatype_array[value_index][:decimal] + 1;
+            data_type="decimal" 
+          end
+        rescue
+          
+        end
+      end
+      # Check value is an float value !!
+      if data_type == "" then
+        begin
+          is_an_float_value = Float(value)
+          #max_length_after_decimal = (((csv_data[colindex].map{|k| k.split('.')[1]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+          #max_length_before_decimal = (((csv_data[colindex].map{|k| k.split('.')[0]}).reject { |c| c.blank? }).group_by(&:size).max.last)[0].size
+          #column_detail[:field_length] = (max_length_before_decimal + max_length_after_decimal + 1).to_s + "," + max_length_after_decimal.to_s
+          columns_datatype_array[value_index][:decimal] = columns_datatype_array[value_index][:decimal] + 1;
+          data_type="decimal" 
+        rescue
+          # catch code at here
+        end
+      end
+      # Check value is an time value !!
+      if data_type == "datetime" then
+        begin
+        # ForHH:MM:SS
+          if (!!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d)(:[0-5]\d)$/) == true ) then
+            columns_datatype_array[value_index][:time] = columns_datatype_array[value_index][:time] + 1;
+            data_type = "time" 
+          end
+        rescue
+          # catch code at here
+        end
+        # only for HH:MM 
+        if data_type != "time" then 
+          begin
+            # For HH:MM
+            if (!!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d)$/) == true ) then
+              columns_datatype_array[value_index][:time] = columns_datatype_array[value_index][:time] + 1;
+              data_type = "time" 
+            end
+          rescue
+            # catch code at here
+          end
+        end
+        # only for HH:MM:SS  AM/PM
+        if data_type != "time" then 
+          begin
+            if (!!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d)(:[0-5]\d) [APap][mM]$/) == true ) then
+              columns_datatype_array[value_index][:time] = columns_datatype_array[value_index][:time] + 1;
+              data_type = "time"
+            end
+          rescue
+            # catch code at here
+          end
+        end
+        # only for HH:MM  AM/PM
+        if data_type != "time" then 
+          begin
+            # ForHH:MM
+            if (!!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d) [APap][mM]$/) == true ) then
+              columns_datatype_array[value_index][:time] = columns_datatype_array[value_index][:time] + 1;
+              data_type = "time"
+            end
+          rescue
+            # catch code at here
+          end
+        end
+      end
+      # Check value is an string value !!
+      if data_type == "" then
+        begin
+          is_data_integer = String(value)
+          columns_datatype_array[value_index][:string] = columns_datatype_array[value_index][:string] + 1;
+          data_type = "string"
+        rescue
+          # catch code at here
+        end
+      end
+      
+    end
   end
 end

@@ -30,7 +30,13 @@
                 </td>
                 <td is_editable ="yes">
                   <div is_default ="yes">
-                    <%if schema[:Type] == "numeric" then %>decimal
+                    <%if schema[:Type] == "numeric" then %>
+                      decimal
+                      <%if schema[:money_symbol] != '' then %>
+                        (Money Format - <%= schema[:money_symbol]%>)
+                      <%elsif schema[:is_percentage] == true then %>
+                        (Percentage/Rate Value)
+                      <% end %>
                     <%elsif schema[:Type] == "timestamp" then %>datetime
                     <%elsif schema[:Type] == "bool" then %>boolean
                     <%elsif schema[:Type].include?'int' then %>integer
@@ -89,7 +95,13 @@
                       <tr>
                         <td><%= schema[:Field] %></td>
                         <td>
-                          <%if schema[:Type] == "numeric" then %>decimal
+                          <%if schema[:Type] == "numeric" then %>
+                            decimal
+                            <%if schema[:money_symbol] != '' then %>
+                              (Money Format - <%= schema[:money_symbol]%>)
+                            <%elsif schema[:is_percentage] == true then %>
+                              (Percentage/Rate Value)
+                            <% end %>
                           <%elsif schema[:Type] == "timestamp" then %>datetime
                           <%elsif schema[:Type] == "bool" then %>boolean
                           <%elsif schema[:Type].include?'int' then %>integer

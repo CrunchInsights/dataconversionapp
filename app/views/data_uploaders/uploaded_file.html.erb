@@ -38,7 +38,7 @@
                       <ul class="dropdown-menu" role="menu">
                         <li><%= link_to "Show Records", uploadfilerecord_datauploaders_path({:table_name => (record.table_name)}), :type=>"button", :class=>"link" %></li>
                         <% if record.has_error_record then %>							    
-                          <li><%= link_to "Show Error", showerrorrecord_datauploaders_path({:table_name => (record.table_name), :is_schema_error => false}), :type=>"button", :class=>"link" %>
+                          <li><%= link_to "Download Error Record", showerrorrecord_datauploaders_path(:table_name => (record.table_name), :is_schema_error => false, :format =>'csv'), :type=>"button", :class=>"link" %>
                           </li>
                         <% end %>					    						    
                       </ul>                    
@@ -61,7 +61,10 @@
   	                        <% end %>
   	                    	</li>					    
   	                    </ul>
-    				        </div>	                       	
+    				        </div>
+                    <% if record.file_upload_status == Constant.file_upload_status_constants[:file_record_insert_error] then %>
+                      <%= link_to "Remove", deletecompletedatasource_datauploaders_path({:table_name => (record.table_name)}), method: :delete,:type=>"button", :class=>"btn btn-sm btn-danger"%>
+                    <% end %>
                   <% end %>
                 <% else %>
                 	<% if record.file_upload_status == Constant.file_upload_status_constants[:file_successfully_uploaded] then %>

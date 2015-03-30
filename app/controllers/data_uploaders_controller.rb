@@ -15,7 +15,7 @@ class DataUploadersController < ApplicationController
     #insert into a record user file mapping ....       
     bucket = S3_BUCKET      
     object = bucket.objects[table_name]
-    #write file into S3
+
     begin
       if selected_file_name != '' then
         is_process_complete = DataUploader.delete_existing_data_source(selected_file_name)
@@ -26,12 +26,15 @@ class DataUploadersController < ApplicationController
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name, Constant.file_upload_status_constants[:file_successfully_uploaded])
       # create a thread for process on file      
       Thread.new do
-       process_on_file(object.read,table_name)   
-      end         
+        #process_on_file_row_wise(table_name)
+        process_on_file(table_name)    
+      end
+
       @json_res = {:is_error => false, :error_message => ""}
       respond_to do |format|  
         format.json { render :json => [@json_res]}
       end
+
     rescue Exception => err
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name, Constant.file_upload_status_constants[:file_not_uploaded])      
       @json_res = {:is_error => true, :error_message => "Error in file <i>#{uploaded_file_name} </i>upload"}
@@ -45,13 +48,37 @@ class DataUploadersController < ApplicationController
     initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)
     @table_name = params[:table_name]
     @uploaded_schema = DataUploader.get_uploaded_schema(@table_name)
-    if @uploaded_schema.size>0
-      @disabled_column = get_user_table_column_info(@table_name)
+    if @uploaded_schema.size > 0 then
+      table_column_information = get_user_table_column_info(@table_name)
+      @disabled_column  = []
+      table_column_information.each do |column_info| 
+        if column_info[:is_disable] == true then
+          @disabled_column.append(column_info[:column_name])
+        end
+
+        if column_info[:money_format] != '' then
+          @uploaded_schema.each do |schema|
+            if schema[:Field] == column_info[:column_name] then
+              schema[:money_symbol] = column_info[:money_format]
+              break
+            end            
+          end
+        elsif column_info[:percentage_format] == true then
+          @uploaded_schema.each do |schema|
+            if schema[:Field] == column_info[:column_name] then
+              schema[:is_percentage] = column_info[:percentage_format]
+              break
+            end
+          end
+        end
+      end
+
       check_record_uploaded = UserFileMapping.where(:table_name => @table_name).first
       @is_record_uploaded = false
       if check_record_uploaded then
         @is_record_uploaded = check_record_uploaded.is_record_uploaded
       end
+      puts @uploaded_schema
       initalize_breadcrumb("Uploaded File Schema", showuploadedschema_datauploaders_path({:table_name => @table_name}))
     else
       redirect_to uploadedfile_datauploaders_path, :flash => { :error => "Table schema not exists" }
@@ -73,7 +100,7 @@ class DataUploadersController < ApplicationController
     @table_name = params[:table_name]
     @summary = {total_record: 0, success_record: 0, error_record: 0}
     user_file_mappings = UserFileMapping.where(:table_name => @table_name).first
-    #byebug
+    #
     @summary[:total_record] = user_file_mappings.total_records  ? user_file_mappings.total_records : 0
     @summary[:success_record] = user_file_mappings.success_records  ? user_file_mappings.success_records : 0
     @summary[:error_record] = user_file_mappings.error_records ? user_file_mappings.error_records : 0
@@ -123,9 +150,33 @@ class DataUploadersController < ApplicationController
 
     response = DataUploader.get_table_data(@table_name, page_size, page_index, order_column_name,order_type,search_value, @table_record[:columns])
     if response.to_a.size > 0 then        
-      response.each do |record|         
+      table_column_information = get_user_table_column_info(@table_name)
+      response.each do |record|
         @table_record[:recordsTotal] = record["totalrecord"]
         @table_record[:recordsFiltered] = record["filterrecord"]
+        puts "%%%%%%%%%%%%%%%%%%%%%%%% record %%%%%%%%%%%%%%%%%%%%%%%%%%%%555"
+        puts record
+        table_column_information.each do |column_info|
+          if record.has_key?(column_info[:column_name])
+            if column_info[:money_format] != '' then
+              record[column_info[:column_name]] = record[column_info[:column_name]].to_s + column_info[:money_format].to_s
+            elsif column_info[:percentage_format] == true then
+              record[column_info[:column_name]] = record[column_info[:column_name]].to_s + "%"              
+            end            
+          end
+        end
+
+        uploaded_schema = DataUploader.get_uploaded_schema(@table_name)
+        uploaded_schema.each do |table_schema|
+          if ((record.has_key?(table_schema[:Field])) && (table_schema[:Type] == "bool")) then
+            if (record[table_schema[:Field]] == "t") then
+              record[table_schema[:Field]] = "TRUE"
+            elsif (record[table_schema[:Field]] == "f") then
+              record[table_schema[:Field]] = "FALSE"
+            end
+          end
+        end
+
         @table_record[:data].append(record)
       end     
     end
@@ -135,7 +186,6 @@ class DataUploadersController < ApplicationController
       format.js  
       format.json { render :json => @table_record}
     end
-
   end
 
    # find uploaded file records
@@ -197,7 +247,7 @@ class DataUploadersController < ApplicationController
     if uploaded_schema.size > 0
         disabled_column = get_user_table_column_info(table_name)
         uploaded_schema.each do |schema|
-          if !(disabled_column.include?schema[:Field]) then            
+          if !((disabled_column.collect{|val| (val[:is_disable] == true ? val[:column_name] : '') }).include?schema[:Field]) then            
             @table_columns[:columns].append({title: schema[:Field], data: schema[:Field]})
           end
         end          
@@ -211,14 +261,18 @@ class DataUploadersController < ApplicationController
     end
   end
 
-  def process_on_file(csvdatafile, table_name)   
+  def process_on_file(table_name)
+      bucket = S3_BUCKET      
+      object = bucket.objects[table_name]
+      csvdatafile = object.read
       csv_data = []       
       max_row_size = 0            
       columns = []
       is_repeated_column = false
       error_record_list = []
       error_row_num_list = []      
-      # filter error records, check is file contain repated column     
+      # filter error records, check is file contain repated column   
+      #byebug  
       CSV.parse(csvdatafile).each_with_index do |row, row_id| 
         if row_id  == 0
           columns = row.to_a
@@ -414,7 +468,7 @@ class DataUploadersController < ApplicationController
                   end
                 end  
                 # check array containing money format
-                if column_detail[:data_type]=="" then
+                if column_detail[:data_type] =="" then
                   begin
                     money_symbol = ''
                     symbol_length = 0
@@ -495,8 +549,54 @@ class DataUploadersController < ApplicationController
                     # catch code at here
                   end
                 end
+                #byebug
+                # Check array containing time values only
+                if column_detail[:data_type] == "datetime" then
+                  begin
+                    is_data_time=csv_data[colindex].collect{|val| !!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d)(:[0-5]\d)$/)? true : false} # ForHH:MM:SS
+                    if ((is_data_time.uniq).size == 1 && ((is_data_time.uniq)[0] == true )) then
+                      column_detail[:data_type] = "time"
+                    end
+                  rescue
+                    # catch code at here
+                  end
+                  # only for HH:MM 
+                  if column_detail[:data_type] != "time" then 
+                    begin
+                      is_data_time=csv_data[colindex].collect{|val| !!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d)$/)? true : false} # ForHH:MM
+                      if ((is_data_time.uniq).size == 1 && ((is_data_time.uniq)[0] == true )) then
+                        column_detail[:data_type] = "time"
+                      end
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                  # only for HH:MM:SS  AM/PM
+                  if column_detail[:data_type] != "time" then 
+                    begin
+                      is_data_time=csv_data[colindex].collect{|val| !!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d)(:[0-5]\d) [APap][mM]$/)? true : false} # ForHH:MM
+                      if ((is_data_time.uniq).size == 1 && ((is_data_time.uniq)[0] == true )) then
+                        column_detail[:data_type] = "time"
+                      end
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                  # only for HH:MM  AM/PM
+                  if column_detail[:data_type] != "time" then 
+                    begin
+                      is_data_time=csv_data[colindex].collect{|val| !!(val =~ /^(0?[1-9]|1[012])(:[0-5]\d) [APap][mM]$/)? true : false} # ForHH:MM
+                      if ((is_data_time.uniq).size == 1 && ((is_data_time.uniq)[0] == true )) then
+                        column_detail[:data_type] = "time"
+                      end
+                    rescue
+                      # catch code at here
+                    end
+                  end
+                end
+
                 # Check array containing string values
-                if column_detail[:data_type]=="" then
+                if column_detail[:data_type] == "" then
                   begin
                     is_data_integer = csv_data[colindex].collect{|val| String(val)}
                     column_detail[:data_type] = "string"
@@ -537,7 +637,7 @@ class DataUploadersController < ApplicationController
             rescue      
             end             
             DataUploader.insert_csv_data(csvdatafile, table_name, @columns_detail, error_row_num_list)
-            if error_record_list.size > 0 then
+            if error_record_list.size > 0 then              
               DataUploader.insert_error_detail(table_name, error_record_list)
             end
             respond_to do |format|          
@@ -553,28 +653,71 @@ class DataUploadersController < ApplicationController
         UserFileMapping.update_uploaded_file_status(table_name, Constant.file_upload_status_constants[:file_uploaded_with_no_record])
       end
   end
+  def process_on_file_row_wise(table_name)
+    begin
+      bucket = S3_BUCKET      
+      object = bucket.objects[table_name]
+      max_row_size = 0            
+      columns = []
+      is_repeated_column = false
+      error_record_list = []
+      error_row_num_list = []      
+      columns_datatype_array=[]
+      puts "***************************  Start time *******************************"
+      puts Time.new
+      CSV.parse(object.read).each_with_index do |row, row_id| 
+        if row_id  == 0
+          columns = row.to_a
+          if columns.uniq.size != columns.size 
+            is_repeated_column = true
+            break
+          end
+          max_row_size = columns.size
+          columns.each_with_index do |column_name, columns_index|
+            columns_datatype_array.append({columns_index: columns_index,columns_name: column_name, integer: 0, string: 0, boolean: 0, datetime: 0,time: 0, decimal: 0})
+          end
+        elsif max_row_size == row.to_a.size
+          temp_row = row.to_a
+          if DataUploader.contain_blank_value(temp_row) 
+            error_row_num_list.append(row_id)
+            error_record_list.append({:row_id => row_id+1, :error => "Record cannot be inserted due to blank values for all columns", :error_record => row.to_a})
+          else
+            DataUploader.processing_on_single_row(row, columns_datatype_array)
+          end              
+        else
+          error_row_num_list.append(row_id)
+          error_record_list.append({:row_id => row_id, :error => "Record cannot be inserted due to unmatched length with header", :error_record => row.to_a})
+        end                  
+      end 
+      puts "***************************  END time *******************************"
+      puts Time.new
+      puts columns_datatype_array
+
+    rescue Exception => e
+      puts e
+    end
+  end
+
 
   def show_error_record
     initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)    
     @result = []
     @table_name = params[:table_name]
     @is_schema_error = params[:is_schema_error]
-    if @is_schema_error == "true" then      
+    if @is_schema_error == "true" then
       @result = FileUploadErrorMessage.table_upload_error_record(@table_name)
+      initalize_breadcrumb("Error Record(s)", showerrorrecord_datauploaders_path)
+      respond_with(@result, @is_schema_error)
     else
-      @summary = {total_record: 0, success_record: 0, error_record: 0}
-      user_file_mappings = UserFileMapping.where(:table_name => @table_name).first
-      @summary[:total_record] = user_file_mappings.total_records  ? user_file_mappings.total_records : 0
-      @summary[:success_record] = user_file_mappings.success_records  ? user_file_mappings.success_records : 0
-      @summary[:error_record] = user_file_mappings.error_records ? user_file_mappings.error_records : 0
-      if @summary[:total_record] >= 0 then
-        @summary[:success_record] = @summary[:success_record] == 0 ? 0 :((@summary[:success_record].to_f/@summary[:total_record])*100).round(2)
-        @summary[:error_record] = @summary[:error_record] == 0 ? 0 : ((@summary[:error_record].to_f/@summary[:total_record])*100).round(2)
-      end
-      @result = TableErrorRecord.table_error_record(@table_name)
-    end    
-    initalize_breadcrumb("Error Record(s)", showerrorrecord_datauploaders_path)
-    respond_with(@result, @is_schema_error)
+      bucket = S3_ERROR_BUCKET_NAME      
+      object = bucket.objects["error#{@table_name}.csv"]
+      download_file_object = "attachment; filename= error#{@table_name}.csv"    
+      url_file = object.url_for(:get, { 
+        expires: 10.minutes,
+          response_content_disposition: download_file_object
+      }).to_s
+      redirect_to url_file
+    end
   end
   
   def restart_insertion
