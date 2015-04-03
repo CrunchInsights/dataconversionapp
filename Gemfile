@@ -26,6 +26,7 @@ gem 'remotipart', '~> 1.2'
 #gem 'compass'
 gem 'jquery-fileupload-rails', github: 'Springest/jquery-fileupload-rails'
 gem 'tzinfo-data', platforms: [:mingw, :mswin, :x64_mingw]
+gem 'activeadmin',github: 'gregbell/active_admin'
 group :development do 
   gem 'spring' # Spring speeds up development by keeping your application running in the background. Read more: https://github.com/rails/spring
   gem 'quiet_assets'

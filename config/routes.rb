@@ -1,4 +1,6 @@
 Rails.application.routes.draw do
+  devise_for :admin_users, ActiveAdmin::Devise.config
+  ActiveAdmin.routes(self)
   resources :datauploaders, :controller => 'data_uploaders', only: [:file_upload, :import, :changetablecolumndetail,
                                                                     :showuploadedschema, :uploadedfile, :uploadfilerecord,
                                                                     :columnexcludeinclude] do

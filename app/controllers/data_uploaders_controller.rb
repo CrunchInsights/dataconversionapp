@@ -17,7 +17,8 @@ class DataUploadersController < ApplicationController
     object = bucket.objects[table_name]
 
     begin
-      if selected_file_name != '' then
+      byebug
+      if selected_file_name != '' && selected_file_name !=nil then
         is_process_complete = DataUploader.delete_existing_data_source(selected_file_name)
       end
       #objecterroe = bucket.objects['error'+table_name]
@@ -26,8 +27,8 @@ class DataUploadersController < ApplicationController
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name, Constant.file_upload_status_constants[:file_successfully_uploaded])
       # create a thread for process on file      
       Thread.new do
-        #process_on_file_row_wise(table_name)
-        process_on_file(table_name)    
+        process_on_file_row_wise(table_name)
+        #process_on_file(table_name)    
       end
 
       @json_res = {:is_error => false, :error_message => ""}
@@ -36,6 +37,7 @@ class DataUploadersController < ApplicationController
       end
 
     rescue Exception => err
+      puts "Error Here ====>>>>>>>>> #{err}"
       add_file_detail = UserFileMapping.insert_uploaded_file_record(current_user, uploaded_file_name, table_name, Constant.file_upload_status_constants[:file_not_uploaded])      
       @json_res = {:is_error => true, :error_message => "Error in file <i>#{uploaded_file_name} </i>upload"}
       respond_to do |format|  
@@ -271,8 +273,7 @@ class DataUploadersController < ApplicationController
       is_repeated_column = false
       error_record_list = []
       error_row_num_list = []      
-      # filter error records, check is file contain repated column   
-      #byebug  
+      # filter error records, check is file contain repated column  
       CSV.parse(csvdatafile).each_with_index do |row, row_id| 
         if row_id  == 0
           columns = row.to_a
@@ -656,16 +657,14 @@ class DataUploadersController < ApplicationController
   def process_on_file_row_wise(table_name)
     begin
       bucket = S3_BUCKET      
-      object = bucket.objects[table_name]
+      s3_object = bucket.objects[table_name]
       max_row_size = 0            
       columns = []
       is_repeated_column = false
       error_record_list = []
       error_row_num_list = []      
       columns_datatype_array=[]
-      puts "***************************  Start time *******************************"
-      puts Time.new
-      CSV.parse(object.read).each_with_index do |row, row_id| 
+      CSV.parse(s3_object.read).each_with_index do |row, row_id| 
         if row_id  == 0
           columns = row.to_a
           if columns.uniq.size != columns.size 
@@ -674,7 +673,13 @@ class DataUploadersController < ApplicationController
           end
           max_row_size = columns.size
           columns.each_with_index do |column_name, columns_index|
-            columns_datatype_array.append({columns_index: columns_index,columns_name: column_name, integer: 0, string: 0, boolean: 0, datetime: 0,time: 0, decimal: 0})
+            columns_datatype_array.append({
+                                            columns_index: columns_index,columns_name: column_name, total_counts: 0, 
+                                            nullable_counts:0,integer: 0,string: 0,boolean: 0,datetime: 0,time: 0,decimal: 0,
+                                            datetime_basic_info: { mdy_date_count: 0 , dmy_date_count: 0 ,
+                                                                  ymd_date_count: 0 , ydm_date_count: 0},
+                                            money_percentage_basic_info:[{symbol:'%', count: 0}]
+                                          })
           end
         elsif max_row_size == row.to_a.size
           temp_row = row.to_a
@@ -686,18 +691,75 @@ class DataUploadersController < ApplicationController
           end              
         else
           error_row_num_list.append(row_id)
-          error_record_list.append({:row_id => row_id, :error => "Record cannot be inserted due to unmatched length with header", :error_record => row.to_a})
+          error_record_list.append({:row_id => row_id+1, :error => "Record cannot be inserted due to unmatched length with header", :error_record => row.to_a})
         end                  
       end 
-      puts "***************************  END time *******************************"
-      puts Time.new
+      maximum_data_type_arr =[]
+      puts "))))))))))))))))))))))))))))))))))))))))))))))))))"
       puts columns_datatype_array
+      columns_datatype_array.each do |column_detail_value|
+        maximum_data_type = DataUploader.find_maximum_counts_datatype(column_detail_value);
+        maximum_data_type[:total_counts] =column_detail_value[:total_counts]
+        maximum_data_type[:nullable_counts] =column_detail_value[:nullable_counts]
+        maximum_data_type[:columns_name] =column_detail_value[:columns_name]
+        maximum_data_type[:symbol] = ''
+        maximum_data_type[:date_format] = ''
+
+        #if we find datatype as datetime then we will check is any specific datetime exist for this
+        if maximum_data_type[:data_type] =="datetime"
+          maximum_data_type[:date_format] = DataUploader.find_datetime_format_if_exist(column_detail_value);
+        end
+        #if we find datatype as decimal then we will check is any specific money format or rate & percentage exist for this
+        if maximum_data_type[:data_type] =="decimal"
+          symbol = DataUploader.find_money_format_if_exist(column_detail_value);
+          maximum_data_type[:symbol] = symbol
+        end
+        maximum_data_type_arr.append(maximum_data_type)
+      end
+      puts maximum_data_type_arr
+      #create table for uploaded csv
+      is_table_created = DataUploader.create_dynamic_table_for_row_wise_read(table_name, maximum_data_type_arr)
+      #byebug
+      if is_table_created
+        # insert records into database....
+        begin
+          maximum_data_type_arr.each do |column|
+            if (column[:symbol] != '')  then
+              update_column_info=UserTableColumnInformation.create(
+                table_name: table_name,
+                column_name: column[:columns_name],
+                money_format:  ((column[:symbol] != '%') ? column[:symbol] : ''),
+                is_disable: false,
+                is_percentage_value: ((column[:symbol] == '%') ? true : false),
+                created_by: current_user.id,
+                created_on: Time.now ,
+                modified_by: current_user.id,
+                modified_on: Time.now)
+            end
+          end
+        rescue      
+        end
+        user_table_mapping = UserFileMapping.where("table_name =?", table_name).first
+          if user_table_mapping then
+            user_table_mapping.is_table_created = true
+            user_table_mapping.save
+          end             
+        DataUploader.insert_csv_data_for_row_wise_read(s3_object.read, table_name, maximum_data_type_arr, error_row_num_list, error_record_list)
+        #byebug
+        if error_record_list.size > 0 then  
+          if user_table_mapping then
+           user_table_mapping.has_error_record = error_row_num_list.size > 0 ? true : false 
+           user_table_mapping.save 
+          end            
+          DataUploader.insert_error_detail(table_name, error_record_list)
+        end
+      end
+     
 
     rescue Exception => e
       puts e
     end
   end
-
 
   def show_error_record
     initalize_breadcrumb("Uploaded File(s)", uploadedfile_datauploaders_path)    
@@ -713,7 +775,7 @@ class DataUploadersController < ApplicationController
       object = bucket.objects["error#{@table_name}.csv"]
       download_file_object = "attachment; filename= error#{@table_name}.csv"    
       url_file = object.url_for(:get, { 
-        expires: 10.minutes,
+          expires: 10.minutes,
           response_content_disposition: download_file_object
       }).to_s
       redirect_to url_file
